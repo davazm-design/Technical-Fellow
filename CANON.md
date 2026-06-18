@@ -1,6 +1,6 @@
 # CANON — parallel-dev-kit
 
-Versión: 1.1
+Versión: 1.2
 Estado: ACTIVO
 
 Constitución del sistema multiagente de construcción paralela. Los slash commands en
@@ -191,6 +191,14 @@ tocar". El `/orchestrator` lo garantiza en la descomposición y lo deja verifica
 `contracts/<feature>/ownership.md`. Si dos slices necesitan el mismo archivo: o es secuencial
 (`depends_on`), o ese archivo es parte del contrato y se congela antes.
 
+**El gate de disjunción es mecánico y depende de que el ownership esté COMPLETO.** Sub-declarar (omitir
+un archivo de integración compartido) produce un falso verde que colisiona en el merge (ver
+`blind_spots.md` BS-6). Por eso el `/orchestrator` PASO 2.5 exige un **checklist duro de archivos de
+integración** (barrels, ensamblador raíz, tipos compartidos, migraciones, `package.json`, registries):
+cada uno se clasifica explícitamente como pre-step frozen, integration-owned o secuencial. Backstops en
+capas si una sub-declaración se cuela: plan-audit → builder → `/git` → `/integrator` (conflicto →
+escalar, nunca resolver a ciegas).
+
 ---
 
 ## 10. Memoria operativa
@@ -217,6 +225,12 @@ Regla: la memoria **NO es fuente de verdad**. Ante conflicto con el repo real, e
 ---
 
 ## CHANGELOG
+
+- **1.2** — Endurece §9 ownership disjunto tras hallazgo empírico (feature no disjunto profile+settings):
+  el gate mecánico depende de declaración COMPLETA; sub-declarar colisiona en merge (codificado como
+  `blind_spots.md` BS-6). `/orchestrator` gana PASO 2.5 (checklist duro de archivos de integración:
+  cada compartido → pre-step frozen / integration-owned / secuencial, nunca implícito). Documenta los
+  backstops en capas (plan-audit → builder → /git → /integrator).
 
 - **1.1** — Añade ciclo completo de vida. Nuevos roles §2.8 `/init` (bootstrap de proyecto desde
   `kit.config.yaml`) y §2.9 `/deploy` (Docker + Terraform, prod gateado). Concede al builder/`/git`

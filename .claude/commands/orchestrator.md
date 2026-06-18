@@ -33,17 +33,58 @@ Reglas:
 - Todo lo que toque zonas 🟠/🟡 (schema baseline, ADRs, config, contratos) va en tareas **secuenciales**,
   nunca paralelas (CANON §6).
 
+### PASO 2.5 — Enumeración de archivos de integración (CHECKLIST DURO, no opcional)
+
+> **Por qué este paso existe (lección empírica):** el gate de disjunción del PASO 3 es **mecánico y
+> sólo vale lo que vale la declaración de `owns:`**. Si sub-declaras el ownership —omites un archivo
+> compartido que en realidad ambas tareas van a tocar— el gate pasa en **falso verde** y la colisión
+> aparece como **conflicto de merge** en el integrator. Validado en vivo: dos slices que ambos editan
+> `server.ts` sin declararlo → merge conflict real. Este paso convierte ese fallo de "probable" a
+> "difícil" forzando la enumeración explícita.
+
+Antes del gate, recorre esta lista de **candidatos a archivo de integración** y, por cada uno que el
+feature toque, **clasifícalo explícitamente** (no lo dejes implícito):
+
+| Categoría de archivo compartido típico | Ejemplos |
+|---|---|
+| Barrels / índices de re-export | `index.ts`, `routes/index.ts` |
+| Ensamblador raíz / router root / DI container | `server.ts`, `app.ts`, `main.ts`, `container.ts` |
+| Tipos / contratos compartidos | `types/*.ts`, `contracts/**` |
+| Schema / migraciones | `migrations/*.sql`, `schema.*` |
+| Manifiestos de dependencias / config | `package.json`, `tsconfig`, `*.config.*`, `.env.example` |
+| Catálogos / registries / seeds | i18n, feature flags, route manifests, seeds |
+
+Para **cada** archivo compartido que el feature requiera, asígnalo a exactamente una de estas tres
+salidas — nunca a una tarea paralela:
+
+1. **Pre-step frozen / contrato** → se construye secuencial ANTES de paralelizar y se congela (las
+   tareas paralelas lo consumen, no lo editan). Las tareas que lo usan llevan `depends_on: [pre-step]`.
+2. **Integration-owned** → lo cablea el `/integrator` al ensamblar (ej. montar routers en `server.ts`).
+   No aparece en el `owns:` de ninguna tarea.
+3. **Secuencial (depends_on)** → si una sola tarea debe editarlo, las demás dependen de ella.
+
+Declara el resultado en `contracts/<feature>/ownership.md` como una sección **"Archivos de integración
+y su disposición"**. Si un archivo compartido no cae en ninguna de las tres salidas, **la descomposición
+no está lista** — no emitas tareas.
+
 ### PASO 3 — Verificar disjunción (gate duro)
 
 Antes de emitir nada, confirma que las tareas marcadas como paralelas tienen `owns:` **disjuntos**:
 
 ```bash
 # Reúne los owns de todas las tareas sin depends_on entre sí; no debe haber rutas repetidas.
-# Si hay solapamiento → re-descompone. NO emitas tareas con ownership solapado.
+awk '/^owns:/{f=1;next} /^[a-z]/{f=0} f&&/- /{sub(/^[ ]*- /,"");print}' tasks/*.md | sort | uniq -d
+# Salida NO vacía = colisión → re-descompone. NO emitas tareas con ownership solapado.
 ```
 
 Si no puedes lograr disjunción, díselo al humano y propón una descomposición secuencial parcial. **No
 inventes** una partición falsa.
+
+**El gate es la primera línea, no la única.** Backstops en capas si una sub-declaración se cuela:
+plan-audit (`/audit` rechaza si el plan invade el `owns:` de otra tarea) → builder (no toca fuera de
+`owns:`) → `/git` (bloquea diff con archivos fuera del `owns:`) → `/integrator` (conflicto de merge →
+atribuir a sub-declaración y escalar, nunca resolver a ciegas). El PASO 2.5 existe para que la colisión
+no llegue tan lejos.
 
 ### PASO 4 — Asignar perfil (CANON §6, docs/PROFILES.md)
 
