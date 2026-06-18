@@ -1,0 +1,76 @@
+# kit.config.yaml — configuración POR PROYECTO
+# Copia este archivo a kit.config.yaml y ajústalo. Todo lo específico de la app vive aquí,
+# NO en los agentes. Así el mismo kit construye un dashboard simple y un SaaS multi-tenant.
+
+project:
+  name: my-app
+  description: "Descripción corta del producto"
+
+# --- Stack (los agentes leen los comandos de validación de aquí) ---
+stack:
+  language: typescript
+  backend:
+    framework: hono          # agnóstico, corre en contenedor Node
+    runtime: node            # >= 20
+  frontend:
+    framework: react-vite    # SPA estática portable (ver docs/CLOUD-PORTABILITY.md)
+    # framework: next        # alternativa con SSR (más acoplado al runtime de hosting)
+  database:
+    engine: postgres         # puro, sin extensiones propietarias
+    migrations: node-pg-migrate
+  validation:                # comandos REALES del proyecto (los builders los ejecutan)
+    typecheck: "npx tsc --noEmit"
+    test: "npm test"
+    lint: "npm run lint"
+    e2e: "npm run test:e2e"  # usado por el integrator
+    build: "npm run build"
+
+# --- Zonas de protección (CANON §6). Paths concretos de ESTE proyecto. ---
+zones:
+  hard_absolute:             # 🔴 nunca se tocan
+    - "**/.env*"
+    - "**/secrets/**"
+  contractual_critical:      # 🟠 sólo con protocolo de excepción + aprobación humana; NUNCA en paralelo
+    - "migrations/*.sql"
+    - "docs/adr/*.md"
+    - "contracts/**"         # el contrato congelado es 🟠 durante el feature
+  sensitive:                 # 🟡 protocolo de excepción; NUNCA en paralelo
+    - "src/lib/config.ts"
+    - "src/lib/errors.ts"
+    - "src/db/tenant-context.ts"
+  # 🟢 todo lo demás es libre y paralelizable
+
+# --- Perfiles de rigor (docs/PROFILES.md) ---
+profiles:
+  default: lite              # perfil por defecto para tareas 🟢
+  rules:
+    force_full_when:         # condiciones que fuerzan perfil full
+      - touches_zone: ["contractual_critical", "sensitive"]
+      - touches_auth: true
+      - touches_pii: true
+      - domain_pack_required: true
+
+# --- Domain packs: checklists de dominio que el Security añade SIN tocar el agente ---
+# Activa sólo los que apliquen a esta app. El kit base ya trae Security genérico.
+domain_packs:
+  enabled: []
+  # enabled:
+  #   - multitenant          # aislamiento por tenant, withTenantContext, cross-tenant leak checks
+  #   - compliance-lfpdppp   # consentimiento, derechos ARCO, retención, minimización
+  #   - pii                  # PII nunca en logs/prompts/errores, enmascaramiento
+
+# --- Paralelismo ---
+parallelism:
+  max_tasks_per_lane: 3      # 1–3
+  lanes: [db, backend, frontend]
+  worktree_prefix: "../wt-"  # dónde se crean los worktrees por tarea
+
+# --- Cloud (docs/CLOUD-PORTABILITY.md) ---
+cloud:
+  deploy_unit: docker
+  iac: terraform
+  target_neutral: true       # evita primitivas propietarias en el núcleo
+  ports:                     # servicios de nube tras interfaz (patrón puerto/adaptador)
+    - blob_store
+    - mailer
+    - secret_provider

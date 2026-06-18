@@ -1,0 +1,26 @@
+# Dockerfile template — multi-stage, non-root, imagen mínima. Portable a cualquier runtime de
+# contenedor (Cloud Run · ECS/Fargate · Azure Container Apps). Ajusta a tu stack real.
+
+# ---- build ----
+FROM node:20-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build          # genera dist/ (back) y/o web/dist (front)
+
+# ---- runtime ----
+FROM node:20-slim AS runtime
+ENV NODE_ENV=production
+WORKDIR /app
+# deps de producción solamente
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+COPY --from=build /app/dist ./dist
+# usuario no-root
+RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin appuser
+USER appuser
+EXPOSE 8080
+# El puerto debe leerse de env (PORT) para portabilidad entre nubes.
+# Secretos NUNCA aquí: se inyectan como variables de entorno del runtime / secret manager.
+CMD ["node", "dist/index.js"]

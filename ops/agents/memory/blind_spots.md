@@ -1,0 +1,18 @@
+# Blind spots del Auditor y Security
+
+Omisiones de los validadores detectadas post-hoc. **Lectura obligatoria al inicio de cada Función 1**
+de `/audit` y `/security` — para preguntarse "¿estoy por repetir un patrón conocido?".
+
+Sin PII, sin secretos, sin datos de clientes. Sólo patrones técnicos y lecciones.
+
+## Seeds heredados de admisioncrm (lecciones genéricas portables)
+
+| # | Blind spot | Patrón subyacente | Cómo evitarlo |
+|---|-----------|-------------------|---------------|
+| BS-1 | CAs basadas en `grep -E "A.*B.*C"` compuesto para verificar **ausencia** de estructura/gatekeeping pasaban literal=1 mientras spirit=0 (la frase aparecía en comentarios/changelog/otros usos). Repetido en 4 sprints antes de detectarse. | Grep no distingue "frase en uso activo" vs "frase en comentario". Es la herramienta equivocada para verificar ausencia de patrón estructural. | Para ausencia de gatekeeping/estructura → **assertion test empírico** (`mock.calls.length`, `toHaveBeenCalled`, conteo de queries entre dos escenarios). Grep simple sólo para **presencia literal** de un identifier/string. El /audit rechaza CAs de regex compuesto sobre estructura. |
+| BS-2 | Suite verde con el pool de DB **completamente mockeado** ocultó un bug de schema (opclass GIN inválida) durante 4 sprints; explotó en el primer `migrate` real. "Tests verdes en mocks no garantizan integración real." | Falso confort por métricas verdes: los tests TS mockean bien, pero el SQL del schema necesita integration testing distinto. Sin checkpoint integration cada N sprints, los bugs se acumulan latentes. | Cada N tareas de capa-app sobre schema, integration checkpoint obligatorio que ejecute la migración + smoke contra Postgres real. En el kit: el lane `db` exige validación integration real como CA, y el `/integrator` corre suite + E2E tras cada merge. |
+| BS-3 | Al eliminar archivos, las referencias en docs canónicas (README, CLAUDE.md, ADRs) quedaron como "mentiras silenciosas" apuntando a archivos inexistentes. Tres apariciones del patrón. | Deuda documental silenciosa por delete: borrar código sin actualizar las referencias doc en el mismo cambio. | Cuando un plan incluye `delete archivo X`, enumerar explícitamente las referencias doc a actualizar como parte del scope. El /audit en cierre corre `grep -rn "<archivo_eliminado>"` y exige cleanup antes de aprobar. |
+| BS-4 | Sistema de agentes basado en `.claude/` local dependía de un cwd correcto no documentado; arrancar desde otro directorio dejaba sin slash commands. Nadie validó cold-start. | Deuda documental + falso confort por sesión caliente: durante el desarrollo todo cargaba bien porque el cwd ya era correcto. | Documentar explícitamente el cwd/setup requerido. Probar cold-start desde ≥2 cwd antes de declarar "agentes funcionan". |
+| BS-5 | Handoff entre agentes vía "el hilo" (contexto de conversación) se rompe en cuanto el trabajo se paraleliza en worktrees/sesiones separadas. | Acoplamiento del handoff al contexto efímero de una sola conversación. | Handoff durable en `tasks/<id>.md` (este kit), no en la conversación. Cada agente lee/escribe estado ahí. Verificar que ningún agente dependa de "lo que se dijo antes en el chat". |
+
+<!-- Nuevas entradas al final. Sanitizar | → \|, sin PII/secretos. -->

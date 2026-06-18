@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+coverage/
+.vitest-cache/
+
+# Config con valores reales del proyecto (se deriva de kit.config.example.yaml)
+kit.config.yaml
+
+# Worktrees efímeros de tareas paralelas (viven fuera del repo: ../wt-*)

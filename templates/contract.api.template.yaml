@@ -1,0 +1,58 @@
+# API contract — feature <feature-slug>
+# Lo produce /architect (contract-first). El backend lo IMPLEMENTA; el frontend lo CONSUME (mock).
+# Congelado durante la fase paralela. OpenAPI 3.1 mínimo.
+
+openapi: "3.1.0"
+info:
+  title: "<feature> API contract"
+  version: "0.1.0"
+
+paths:
+  /resource:
+    get:
+      summary: List resources
+      parameters:
+        - { name: status, in: query, required: false, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResourceList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      summary: Create resource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateResource" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Resource" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+components:
+  schemas:
+    Resource:
+      type: object
+      required: [id, status, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string }
+        created_at: { type: string, format: date-time }
+    CreateResource:
+      type: object
+      required: [name]
+      additionalProperties: false   # equivalente a Zod .strict() en el boundary
+      properties:
+        name: { type: string }
+    ResourceList:
+      type: array
+      items: { $ref: "#/components/schemas/Resource" }
+  responses:
+    Unauthorized: { description: Unauthorized }
+    Conflict: { description: Conflict (e.g. unique violation) }

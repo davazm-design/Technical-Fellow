@@ -1,0 +1,40 @@
+# main.tf — template neutral. El módulo container_service abstrae el runtime; el adapter concreto se
+# elige por var.target_cloud. NO pongas secretos aquí ni en variables en claro.
+
+terraform {
+  required_version = ">= 1.6"
+  # backend remoto cifrado — descomenta y configura el de tu nube. Nunca state local en git.
+  # backend "s3"    { bucket = "...", key = "app/terraform.tfstate", region = "...", encrypt = true }
+  # backend "gcs"   { bucket = "...", prefix = "app" }
+  # backend "azurerm" { ... }
+}
+
+variable "target_cloud" {
+  type        = string             # "cloudrun" | "fargate" | "containerapps"
+  description = "Selecciona el adapter de runtime de contenedor."
+}
+
+variable "image" {
+  type        = string             # registry/app@sha256:... (digest, no tag mutable)
+  description = "Imagen Docker a desplegar."
+}
+
+variable "env_vars" {
+  type        = map(string)        # SOLO config no-secreta. Secretos vía secret manager del adapter.
+  default     = {}
+}
+
+variable "region" { type = string }
+
+# El adapter concreto vive en ./adapters/<target_cloud> y recibe estas variables.
+module "container_service" {
+  source       = "./adapters/${var.target_cloud}"
+  image        = var.image
+  env_vars     = var.env_vars
+  region       = var.region
+  # secret_refs: nombres lógicos resueltos por el secret manager de cada nube (no valores).
+}
+
+output "service_url" {
+  value = module.container_service.service_url
+}
