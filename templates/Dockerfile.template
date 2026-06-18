@@ -22,5 +22,8 @@ RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin appuser
 USER appuser
 EXPOSE 8080
 # El puerto debe leerse de env (PORT) para portabilidad entre nubes.
+# El server DEBE bindear 0.0.0.0 (no localhost) o el puerto queda inalcanzable tras el port-mapping
+# del host / la nube — gotcha de contenedor, ver blind_spots.md BS-7.
+# NO correr `tsx` en runtime (flaky como PID 1): este template corre JS compilado. tsx es solo dev.
 # Secretos NUNCA aquí: se inyectan como variables de entorno del runtime / secret manager.
 CMD ["node", "dist/index.js"]
