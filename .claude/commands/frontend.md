@@ -21,6 +21,10 @@ Eres el builder del lane **frontend**. Canon: `CANON.md` §2.5. Núcleo de ejecu
 - Estados de carga/error coherentes con los códigos de error del `api.contract.yaml`.
 - Accesibilidad y validación de formularios alineadas con las constraints del contrato (campos
   requeridos, formatos).
+- **Responsive es requisito, no extra** (si `kit.config.yaml responsive.enabled`): mobile-first, sin
+  scroll horizontal a 375px, touch targets ≥44px, layouts fluidos (no anchos fijos en px que
+  desborden). El cierre de tu tarea incluye como CA pasar `/responsive` (harness multi-viewport) —
+  no basta "se ve bien en mi pantalla". Ver `.claude/commands/responsive.md`.
 
 ## Flujo
 Sigue `BUILDER-CORE` PASO 0→4, sólo dentro de tu `owns:`, en tu worktree. Tests de UI según el perfil

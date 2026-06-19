@@ -48,6 +48,7 @@ Detalle completo: [`docs/PARALLEL-MODEL.md`](docs/PARALLEL-MODEL.md).
 | `/backend` `/frontend` `/db` | Builders especializados que ejecutan en su worktree; cierran git con tu autorización | Heredado (era `/coder`) |
 | `/git` | Commit atómico + push + PR + **merge gateado** (autorización nominal del PR; tarea suelta) | Heredado + extendido |
 | `/integrator` | Merge topológico de N ramas + verde post-merge + E2E + promoción a main con tu OK | **Nuevo** |
+| `/responsive` | Valida responsividad empírica (móvil/tablet) con harness Playwright multi-viewport; opt-in | **Nuevo** |
 | `/deploy` | Docker + Terraform, portable AWS/Azure/GCP; prod sólo con tu OK nominal | **Nuevo** |
 
 Núcleo de ejecución compartido por los builders: [`docs/BUILDER-CORE.md`](docs/BUILDER-CORE.md).

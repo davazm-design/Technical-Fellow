@@ -1,6 +1,6 @@
 # CANON — parallel-dev-kit
 
-Versión: 1.2
+Versión: 1.3
 Estado: ACTIVO
 
 Constitución del sistema multiagente de construcción paralela. Los slash commands en
@@ -115,6 +115,13 @@ ver `docs/CLOUD-PORTABILITY.md`). Bajo gobernanza: cambios a infra (🟠) pasan 
 security. **Prod nunca se despliega sin tu autorización nominal por-deploy**; siempre `plan` →
 revisión → `apply`. Secretos nunca horneados en imagen ni en el state.
 
+### 2.10 Responsive (nuevo, opt-in)
+Valida **empíricamente** que la UI es usable en móvil y tablet, renderizando y midiendo a varios
+viewports (no leyendo CSS). Núcleo = harness Playwright que asserta cero overflow horizontal, touch
+targets ≥44px y visibilidad a 375/768/1280px. Opt-in vía `kit.config.yaml responsive.enabled`. Opera
+sobre el lane frontend (CA de cierre) y el E2E del `/integrator`. **Prohibido emitir PASS sin ejecutar
+el harness** (anti falso-confort, BS-8). No implementa fixes — reporta violadores exactos.
+
 ---
 
 ## 3. Regla de honestidad (todos los roles)
@@ -225,6 +232,11 @@ Regla: la memoria **NO es fuente de verdad**. Ante conflicto con el repo real, e
 ---
 
 ## CHANGELOG
+
+- **1.3** — Añade §2.10 `/responsive`: validación empírica de responsividad (móvil/tablet) vía harness
+  Playwright multi-viewport (overflow, touch targets, visibilidad), opt-in por `kit.config.yaml`.
+  Requisito del lane frontend (CA de cierre) + E2E del integrator. Codifica BS-8 (responsive leído ≠
+  renderizado). NO es un revisor-de-prosa: prohibido PASS sin ejecutar el harness.
 
 - **1.2** — Endurece §9 ownership disjunto tras hallazgo empírico (feature no disjunto profile+settings):
   el gate mecánico depende de declaración COMPLETA; sub-declarar colisiona en merge (codificado como

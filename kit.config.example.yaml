@@ -59,6 +59,16 @@ domain_packs:
   #   - compliance-lfpdppp   # consentimiento, derechos ARCO, retención, minimización
   #   - pii                  # PII nunca en logs/prompts/errores, enmascaramiento
 
+# --- Responsividad (agente /responsive — validación empírica multi-viewport) ---
+responsive:
+  enabled: true              # solo apps con UI; valida móvil + tablet, no solo desktop
+  viewports:                 # el harness Playwright assert-a en cada uno
+    - { name: phone,   width: 375,  height: 667 }
+    - { name: tablet,  width: 768,  height: 1024 }
+    - { name: desktop, width: 1280, height: 800 }
+  routes: ["/"]              # rutas a validar (añade las páginas del producto)
+  min_tap_px: 44             # touch target mínimo (WCAG 2.5.5 / Apple HIG)
+
 # --- Paralelismo ---
 parallelism:
   max_tasks_per_lane: 3      # 1–3
