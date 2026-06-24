@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { parseArgs } from "node:util";
-import { loadArtifact, validateArtifact } from "../lib/validate.js";
+import { loadTask } from "../lib/loaders.js";
 import { classifyDiff } from "../lib/ownership.js";
 import { diffNames, GitError, isGitAvailable, isGitRepo } from "../lib/git.js";
 
@@ -8,10 +8,6 @@ const USAGE =
   "uso: agentkit check-diff-ownership --task <file> [--base <branch> | --staged]\n" +
   "  --base <branch>   compara <branch>...HEAD (default: main)\n" +
   "  --staged          compara el index (git diff --cached); ignora --base\n";
-
-interface Owned {
-  owns?: unknown;
-}
 
 /** Ejecuta check-diff-ownership. Exit: 0 ok, 1 violación/schema, 2 operacional. */
 export function runCheckDiffOwnership(argv: string[]): number {
@@ -42,20 +38,15 @@ export function runCheckDiffOwnership(argv: string[]): number {
     return 2;
   }
 
-  // Gate de schema: cubre "task sin owns", "owns vacío", "patrón vacío" (minLength/minItems).
-  const validation = validateArtifact("task", task);
-  if (!validation.ok) {
+  // Gate de schema vía loader tipado: cubre "task sin owns", "owns vacío", "patrón vacío"
+  // (required / minItems / minLength). En éxito, `owns` viene tipado como string[] no vacío.
+  const loaded = loadTask(task);
+  if (!loaded.ok) {
     process.stderr.write(`✗ task inválido (no se puede chequear ownership): ${task}\n`);
-    for (const err of validation.errors) process.stderr.write(`    - ${err}\n`);
+    for (const err of loaded.errors) process.stderr.write(`    - ${err}\n`);
     return 1;
   }
-
-  const data = loadArtifact(task) as Owned;
-  const owns = Array.isArray(data.owns) ? (data.owns as string[]) : [];
-  if (owns.length === 0) {
-    process.stderr.write("✗ el task no declara `owns` (ownership obligatorio, CANON §9)\n");
-    return 1;
-  }
+  const owns: string[] = loaded.data.owns;
 
   // Pre-requisitos operacionales de git.
   if (!isGitAvailable()) {
