@@ -25,10 +25,15 @@
         "human_approval_requested",
         "human_approval_granted",
         "task_completed",
+        "run_completed",
         "integration_started",
         "integration_failed",
         "integration_completed"
       ]
+    },
+    "message": {
+      "type": "string",
+      "description": "Mensaje humano corto del evento (sin secretos ni PII)."
     },
     "severity": {
       "type": "string",

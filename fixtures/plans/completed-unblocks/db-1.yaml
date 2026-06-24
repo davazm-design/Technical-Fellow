@@ -1,0 +1,20 @@
+id: db-1
+feature: demo
+title: task db-1
+lane: db
+agent: db
+status: completed
+profile: lite
+zones: ["🟢"]
+risk_level: low
+depends_on: []
+owns:
+  - migrations/0003.sql
+contracts: []
+gates:
+  audit_f1: required
+  security_f1: required
+  audit_f2: optional
+  security_f2: optional
+evidence_required: [tests]
+acceptance_criteria: ["hace algo verificable"]

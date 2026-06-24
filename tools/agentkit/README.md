@@ -101,6 +101,74 @@ Sugerencia:
 Agrega el path al `owns` del task, o separa el cambio en otra task (CANON §9: ownership disjunto).
 ```
 
+### run logs JSONL (trazabilidad — Bloque D1)
+
+Un run log es un archivo **JSONL**: una línea = un evento que valida contra `schemas/run-event.schema.json`
+(CANON §10). Append-only; sin secretos ni PII (el schema es cerrado).
+
+```bash
+agentkit validate-run-event runs/2026-06-24/event.json     # un evento suelto
+agentkit validate-run-log   runs/2026-06-24/run.jsonl       # log completo (valida cada línea)
+agentkit append-run-event   --log runs/.../run.jsonl --event event.json   # valida y añade 1 línea
+```
+
+- `event_type` ∈ `run_started, agent_invoked, artifact_created, validation_passed, validation_failed,
+  gate_blocked, task_completed, run_completed` (+ `human_approval_*`, `integration_*` reservados).
+- Campos: `run_id`, `timestamp`, `event_type` (requeridos); `severity`, `agent_id`, `task_id`,
+  `feature_id`, `input_refs`, `output_refs`, `evidence_refs`, `message` (opcionales). `tokens`, `cost_usd`,
+  `duration_ms` opcionales y fuera de uso por ahora.
+- `append-run-event` **valida antes de escribir**: un evento inválido NO se añade (exit 1).
+- `validate-run-log` reporta errores con número de línea; ignora líneas en blanco.
+
+### orquestador mínimo DAG (Bloque D2)
+
+Orquestador **de solo lectura**: carga las tasks de un directorio, las valida contra
+`task.schema.json` y analiza el grafo de `depends_on`. **No ejecuta builders, no escribe código, no
+commitea, no mergea.** El directorio debe contener solo archivos de task (`.md`/`.yaml`/`.json`).
+
+```bash
+agentkit graph         --tasks tasks/ [--json]   # tasks, deps, orden topológico, bloqueos
+agentkit status        --tasks tasks/ [--json]   # resumen: total/valid/invalid/ready/blocked/ciclos/…
+agentkit next          --tasks tasks/ [--json]   # solo tasks listas para ejecutar
+agentkit validate-plan --tasks tasks/            # valida todo el plan (schema + DAG)
+```
+
+Detecta: orden topológico, **ciclos** (con ruta legible `a → b → a`), **dependencias faltantes**,
+**ids duplicados**, tasks **bloqueadas** y tasks **listas**. Una task que no valida **bloquea el plan**.
+
+`next` solo devuelve tasks con `status` ∈ {`draft`,`planned`} cuyas `depends_on` están **todas
+`completed`**; nunca `blocked`/`rejected`/`completed`. Si el plan es estructuralmente inválido
+(ciclo/missing/duplicado/task inválida), `next` falla (exit 1) en vez de adivinar.
+
+### evals deterministas (Bloque D3)
+
+`agentkit eval` mide si las **capacidades críticas** del kit siguen funcionando: schemas, ownership,
+DAG y run logs. Es **determinista** (sin LLM, sin git, sin llamadas externas): reutiliza las funciones
+ya implementadas sobre fixtures dedicados en `evals/cases/`.
+
+```bash
+agentkit eval                      # corre los 9 casos; PASS sólo si todas las métricas críticas = 100%
+agentkit eval --case dag-cycle     # un caso
+agentkit eval --json               # salida estructurada estable (para CI)
+```
+
+**Casos:** `task-valid`, `task-invalid`, `ownership-pass`, `ownership-fail`, `dag-valid`, `dag-cycle`,
+`dag-missing-dependency`, `run-log-valid`, `run-log-invalid`. Un caso **negativo** cuenta como PASS si
+el sistema **bloquea correctamente** (p.ej. `task-invalid` pasa cuando la task inválida es rechazada).
+
+**Métricas (todas críticas):** `schema_pass_rate`, `invalid_schema_block_rate`,
+`ownership_violation_detection_rate`, `dag_validity_rate`, `missing_dependency_detection_rate`,
+`cycle_detection_rate`, `run_log_validation_rate`, `format_compliance_rate`. Cada una es un *rate*
+sobre sus casos; el comando sale 1 si alguna < 100%.
+
+Cada resultado incluye `case_id, category, command_or_check, expected, actual, passed, metric, message`.
+Por default **no** se guardan resultados; redirige `--json` a `evals/results/` si los quieres persistir.
+
+**tests vs evals:** los **tests** (`npm test`, vitest) verifican la *implementación* (unidades, ramas,
+integración interna). Los **evals** verifican que las *capacidades de producto* del kit (validar, detectar
+violaciones, ordenar el DAG, validar logs) se comportan correctamente de extremo a extremo — incluyendo
+que los casos negativos se bloqueen. Ambos corren en `npm run ci`.
+
 ## Exit codes (consistentes en toda la CLI)
 
 | Code | Significado |
@@ -171,8 +239,9 @@ Atajo local que replica el CI (sin el drift gate): `npm run ci`.
 
 ## Punto de parada recomendado
 
-Tras este bloque (CI + tipos + loaders) el siguiente paso recomendado es **validar el sistema con un
-feature piloto real** antes de avanzar a event logs / orquestador (Bloque D).
+Tras Bloque D (event logs + orquestador DAG + evals) hay un **punto de parada antes de Bloque E**
+(seguridad/policy engine, approvals formales, integrator ejecutable). No avanzar a Bloque E sin
+aprobación explícita; el sistema ya es local, verificable y trazable de extremo a extremo.
 
 ## Limitaciones conocidas (Bloques B–C)
 

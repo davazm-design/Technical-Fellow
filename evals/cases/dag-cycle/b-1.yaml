@@ -1,0 +1,15 @@
+id: b-1
+feature: eval
+title: b-1
+lane: backend
+agent: backend
+status: planned
+profile: lite
+zones: ["🟢"]
+risk_level: low
+depends_on: [a-1]
+owns: ["src/b.ts"]
+contracts: []
+gates: { audit_f1: required, security_f1: required, audit_f2: optional, security_f2: optional }
+evidence_required: [tests]
+acceptance_criteria: ["x"]

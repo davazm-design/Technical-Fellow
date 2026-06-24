@@ -15,7 +15,7 @@
     "generate:types": "tsx scripts/generate-types.ts",
     "validate:fixtures": "tsx scripts/validate-fixtures.ts",
     "selftest:ownership": "tsx scripts/selftest-ownership.ts",
-    "ci": "npm run typecheck && npm test && npm run -s agentkit -- doctor && npm run validate:fixtures && npm run selftest:ownership"
+    "ci": "npm run typecheck && npm test && npm run -s agentkit -- doctor && npm run validate:fixtures && npm run selftest:ownership && npm run -s agentkit -- eval"
   },
   "dependencies": {
     "ajv": "^8.17.1",
