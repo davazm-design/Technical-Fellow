@@ -1,0 +1,14 @@
+{
+  "feature": "demo",
+  "generated_at": "2026-06-24T12:00:00Z",
+  "ready": true,
+  "merge_order": ["db-1", "backend-1"],
+  "checks": [
+    { "name": "validate-plan", "status": "pass" },
+    { "name": "closure-verdicts", "status": "skipped", "detail": "ningún gate required" }
+  ],
+  "blockers": [],
+  "tasks": [
+    { "id": "backend-1", "status": "completed", "ready_for_integration": true, "blockers": [] }
+  ]
+}

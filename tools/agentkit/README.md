@@ -233,6 +233,38 @@ expirada · `2` operacional (dir inexistente, schema inválido de task/approval/
 **E2 NO incluye** integrator (E3+), merge/deploy, control de acceso real, firmas ni RBAC. Un approval
 es evidencia: distingue la aprobación formal de la confirmación conversacional, nada más.
 
+### integration readiness (Bloque E3)
+
+`integration-report` determina si un feature está **listo para integrarse**, componiendo los gates
+existentes en un reporte. Es **SOLO LECTURA**: no ejecuta merge/push/deploy, no sugiere comandos de
+merge (eso es E4), no resuelve conflictos, no escribe archivos.
+
+```bash
+agentkit validate-integration-report report.json
+agentkit integration-report --feature invoices --tasks tasks/ \
+  [--verdicts verdicts/] [--policies policies/] [--approvals approvals/] \
+  [--repo <path>] [--base main] [--now <iso>] [--json]
+```
+
+**Un feature está `ready` si** (todos los checks sin `fail` y sin blockers):
+- **validate-plan** pasa (DAG sin ciclo/missing/duplicado/task inválida);
+- **tasks-completed**: todas las tasks del feature están `status: completed`;
+- **closure-verdicts**: por cada task, `audit_f2`/`security_f2: required` ⇒ existe un verdict con
+  `phase: closure-audit`/`closure-security` y `verdict: "CIERRE APROBADO"` (reusa `verdict.schema`;
+  `CIERRE CON CONDICIONES`/`CIERRE RECHAZADO` no satisfacen; gate `skipped`/`optional` no exige);
+- **ownership** (solo con `--repo`): todo archivo de implementación del diff está en el `owns` de alguna
+  task del feature (sin `--repo` ⇒ `skipped`);
+- **policies** (solo con `--policies`): `evaluate-policies` no bloquea (sin `--policies` ⇒ `skipped`);
+- **approvals**: si alguna task requiere aprobación (risk critical / 🔴🟠 / policy), debe existir una
+  approval suficiente (`--approvals`); si se requiere y no se pasa `--approvals` ⇒ `fail`.
+
+Cada check es `pass | fail | skipped`. Exit `0` ready · `1` not ready (con blockers claros) · `2`
+operacional (input inválido, dir/verdict/policy/approval inválido). `--now` fija el instante para
+expiración de approvals (determinista).
+
+**E3 vs E4:** E3 solo **dice si está listo** (readiness, solo lectura). E4 (no implementado) propondría
+un **plan de merge** (orden + comandos como texto, nunca ejecutados). E3 nunca ejecuta ni sugiere merge.
+
 ## Exit codes (consistentes en toda la CLI)
 
 | Code | Significado |

@@ -7,3 +7,4 @@ export type { Verdict } from "./generated/verdict.js";
 export type { RunEvent } from "./generated/run-event.js";
 export type { Policy } from "./generated/policy.js";
 export type { Approval } from "./generated/approval.js";
+export type { IntegrationReport } from "./generated/integration-report.js";

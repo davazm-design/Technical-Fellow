@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parallel-dev-kit/schemas/integration-report.schema.json",
+  "title": "IntegrationReport",
+  "description": "Foto de readiness de un feature (E3, SOLO LECTURA). Compone los gates existentes (validate-plan, tasks completed, verdicts de cierre, ownership, policies, approvals) en un veredicto ready/not-ready. NO ejecuta merge, NO sugiere comandos (E4), NO contiene resultado de merge, hashes, resolución de conflictos ni estado post-merge.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["feature", "generated_at", "ready", "merge_order", "checks", "blockers", "tasks"],
+  "properties": {
+    "feature": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "ready": { "type": "boolean" },
+    "merge_order": {
+      "type": "array",
+      "description": "Orden topológico sugerido por el DAG (solo informativo; NO ejecuta merges).",
+      "items": { "type": "string" }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "status"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["pass", "fail", "skipped"] },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "blockers": { "type": "array", "items": { "type": "string" } },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "ready_for_integration", "blockers"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "type": "string" },
+          "ready_for_integration": { "type": "boolean" },
+          "blockers": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

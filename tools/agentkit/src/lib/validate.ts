@@ -19,6 +19,7 @@ export const ARTIFACT_TYPES = {
   "run-event": "run-event.schema.json",
   policy: "policy.schema.json",
   approval: "approval.schema.json",
+  "integration-report": "integration-report.schema.json",
 } as const;
 
 export type ArtifactType = keyof typeof ARTIFACT_TYPES;
