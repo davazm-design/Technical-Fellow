@@ -1,0 +1,7 @@
+# INVÁLIDO: artifacts incompleto, falta `data` (un contrato es data + api + types).
+feature: invoices
+version: 0.1.0
+status: draft
+artifacts:
+  api: contracts/invoices/api.contract.yaml
+  types: contracts/invoices/types.contract.ts

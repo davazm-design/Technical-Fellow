@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parallel-dev-kit/schemas/task.schema.json",
+  "title": "Task",
+  "description": "Handoff durable de una tarea (CANON §2.1, §9). Fuente ÚNICA de ownership: el campo owns: es la verdad; ownership.md se deriva. Estos campos viven en el frontmatter YAML (--- ... ---) al inicio de tasks/<id>.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "lane", "feature", "profile", "zones", "depends_on", "owns", "objetivo"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Identificador estable de la tarea. Convención <lane>-<n> (backend-1) o pre-step nombrado (shared-user-context).",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "lane": {
+      "type": "string",
+      "description": "Lane de paralelismo (CANON §1).",
+      "enum": ["db", "backend", "frontend"]
+    },
+    "feature": {
+      "type": "string",
+      "description": "Slug del feature al que pertenece la tarea.",
+      "minLength": 1
+    },
+    "contract": {
+      "type": "string",
+      "description": "Ruta al contrato congelado del que depende (CANON §8).",
+      "pattern": "^contracts/"
+    },
+    "profile": {
+      "type": "string",
+      "description": "Perfil de rigor (docs/PROFILES.md).",
+      "enum": ["lite", "full"]
+    },
+    "zones": {
+      "type": "array",
+      "description": "Zonas de protección que toca la tarea (CANON §6). 🔴 hace la tarea inválida y no se declara aquí. 🟠/🟡 ⇒ NO paralelizable.",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "enum": ["🟢", "🟠", "🟡"] }
+    },
+    "depends_on": {
+      "type": "array",
+      "description": "IDs de tareas de las que depende. Define el orden de merge topológico. [] si independiente.",
+      "items": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+      "uniqueItems": true
+    },
+    "worktree": {
+      "type": "string",
+      "description": "Ruta del worktree efímero (CANON §2.5)."
+    },
+    "branch": {
+      "type": "string",
+      "description": "Rama de la tarea, ej. backend/backend-1."
+    },
+    "owns": {
+      "type": "array",
+      "description": "OWNERSHIP EXCLUSIVO. Ningún otro task paralelo toca estos archivos (CANON §9). Fuente única para el ownership map.",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "objetivo": {
+      "type": "string",
+      "description": "Una frase: qué entrega esta tarea.",
+      "minLength": 1
+    }
+  }
+}

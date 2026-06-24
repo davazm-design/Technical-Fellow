@@ -1,0 +1,6 @@
+{
+  "run_id": "run-2026-06-24-invoices-01",
+  "timestamp": "2026-06-24T11:05:00Z",
+  "event_type": "agent_finished_maybe",
+  "feature_id": "invoices"
+}

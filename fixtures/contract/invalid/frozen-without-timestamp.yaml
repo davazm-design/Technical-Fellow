@@ -1,0 +1,8 @@
+# INVÁLIDO: status=frozen exige frozen_at (allOf if/then). Congelar sin sello temporal no es auditable.
+feature: invoices
+version: 0.1.0
+status: frozen
+artifacts:
+  api: contracts/invoices/api.contract.yaml
+  types: contracts/invoices/types.contract.ts
+  data: contracts/invoices/data.contract.md

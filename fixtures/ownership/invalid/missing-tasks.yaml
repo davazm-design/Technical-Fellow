@@ -1,0 +1,5 @@
+# INVÁLIDO: falta el array required `tasks`.
+feature: invoices
+integration_files:
+  - path: src/server.ts
+    disposition: integration-owned

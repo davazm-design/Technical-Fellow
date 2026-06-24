@@ -1,0 +1,11 @@
+# VÁLIDO: task de lane db en zona 🟠 (no paralelizable), sin depends_on.
+id: db-1
+lane: db
+feature: invoices
+contract: contracts/invoices/
+profile: full
+zones: ["🟠"]
+depends_on: []
+owns:
+  - migrations/0007_invoices.sql
+objetivo: Crear la tabla invoices y su índice por tenant.

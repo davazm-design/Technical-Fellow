@@ -1,0 +1,15 @@
+# VÁLIDO: veredicto de plan (F1) del Auditor.
+task_id: backend-1
+feature: invoices
+phase: plan
+agent: audit
+verdict: APROBADO CON CONDICIONES
+timestamp: "2026-06-24T11:00:00Z"
+findings:
+  - severity: MEDIUM
+    description: El rollback por archivo no especifica el orden de revert.
+    evidence: "plan §rollback"
+conditions:
+  - Añadir orden de revert explícito antes de abrir el lane.
+evidence:
+  - "src/routes/invoices.ts:1-40"

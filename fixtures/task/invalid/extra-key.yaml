@@ -1,0 +1,12 @@
+# INVÁLIDO: campo no permitido `assignee` (additionalProperties:false detecta typos/campos espurios).
+id: backend-3
+lane: backend
+feature: invoices
+contract: contracts/invoices/
+profile: lite
+zones: ["🟢"]
+depends_on: []
+owns:
+  - src/routes/payments.ts
+objetivo: Endpoint de pagos.
+assignee: claude

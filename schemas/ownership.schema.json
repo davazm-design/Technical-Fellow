@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parallel-dev-kit/schemas/ownership.schema.json",
+  "title": "OwnershipMap",
+  "description": "Mapa de ownership de un feature (CANON §9). VISTA DERIVADA del owns: de cada task; el orchestrator/agentkit la compone. Incluye el checklist duro de archivos de integración (PASO 2.5, BS-6).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["feature", "tasks"],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Slug del feature."
+    },
+    "tasks": {
+      "type": "array",
+      "description": "Tareas del feature con su ownership declarado.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "lane", "owns", "depends_on"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "lane": { "type": "string", "enum": ["db", "backend", "frontend"] },
+          "owns": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "depends_on": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+            "uniqueItems": true
+          },
+          "profile": { "type": "string", "enum": ["lite", "full"] }
+        }
+      }
+    },
+    "integration_files": {
+      "type": "array",
+      "description": "Checklist duro de archivos compartidos (CANON §9, orchestrator PASO 2.5). Cada archivo compartido DEBE tener disposición explícita; nunca implícito ni en una tarea paralela.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "disposition"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "disposition": {
+            "type": "string",
+            "description": "pre-step-frozen: construido secuencial antes. integration-owned: lo cablea el integrator, no está en ningún owns:. sequential: una sola tarea lo edita en orden.",
+            "enum": ["pre-step-frozen", "integration-owned", "sequential"]
+          },
+          "detail": { "type": "string" }
+        }
+      }
+    }
+  }
+}

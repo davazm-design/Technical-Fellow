@@ -1,0 +1,27 @@
+{
+  "name": "@parallel-dev-kit/agentkit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CLI y validadores mecánicos del parallel-dev-kit (traducción ejecutable del CANON).",
+  "bin": {
+    "agentkit": "src/cli.ts"
+  },
+  "scripts": {
+    "agentkit": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

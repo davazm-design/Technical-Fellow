@@ -1,0 +1,9 @@
+# INVÁLIDO: severity fuera del enum (CRITICAL|HIGH|MEDIUM|LOW).
+task_id: backend-1
+feature: invoices
+phase: security
+agent: security
+verdict: BLOCKED
+findings:
+  - severity: BLOCKER
+    description: Secreto hardcodeado en el handler.

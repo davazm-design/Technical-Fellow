@@ -1,0 +1,10 @@
+# INVÁLIDO: disposition fuera del enum (pre-step-frozen|integration-owned|sequential).
+feature: invoices
+tasks:
+  - id: backend-1
+    lane: backend
+    owns: ["src/routes/invoices.ts"]
+    depends_on: []
+integration_files:
+  - path: src/server.ts
+    disposition: maybe-later

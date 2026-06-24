@@ -1,0 +1,8 @@
+{
+  "run_id": "run-2026-06-24-invoices-01",
+  "timestamp": "2026-06-24T10:00:00Z",
+  "event_type": "run_started",
+  "severity": "info",
+  "feature_id": "invoices",
+  "agent_id": "orchestrator"
+}
