@@ -30,6 +30,22 @@ agentkit validate-run-event   runs/2026-06-24/event.json
 
 Acepta `.md` (frontmatter YAML), `.yaml`/`.yml` y `.json`. Schemas en `schemas/` (ver su README).
 
+#### Contrato de task (frontmatter canónico)
+
+Campos requeridos (`schemas/task.schema.json`): `id`, `feature`, `title`, `lane`, `agent`, `status`,
+`profile`, `zones`, `risk_level`, `depends_on`, `owns`, `contracts`, `gates`, `evidence_required`,
+`acceptance_criteria`. Opcional: `notes`. Enums clave:
+
+- `status`: `draft | planned | in_progress | blocked | completed | rejected`
+- `risk_level`: `low | medium | high | critical`
+- `gates`: objeto con `audit_f1`/`security_f1`/`audit_f2`/`security_f2`, cada uno `required | optional | skipped`
+- `evidence_required`: array de strings (`tests`, `typecheck`, `ownership_check`, `security_review`, `screenshots`, `migration_test`, …)
+- `contracts`: array de rutas (plural)
+
+**Fuera del task** (pertenecen al runtime/event-log, no al contrato): `run_id`, `model`, `tokens`,
+`cost`, `latency`, `started_at`, `completed_at`, `actual_verdict`, `commands_executed`, `files_changed`,
+`approval_record`. El cuerpo Markdown queda libre para contexto, non-goals, plan y notas.
+
 ### doctor — diagnóstico del kit
 
 ```bash
@@ -50,11 +66,19 @@ agentkit check-diff-ownership --task tasks/backend-1.md --base main
 
 # Modo secundario: cambios en el index (pre-commit local)
 agentkit check-diff-ownership --task tasks/backend-1.md --staged
+
+# Contra otro repo, sin cd:
+agentkit check-diff-ownership --repo ../pilot-repo --task ../pilot-repo/tasks/backend-1.md --base main
 ```
 
 - `--base <branch>` → `git diff --name-only <branch>...HEAD` (el diff "estilo PR": lo que la rama
   introdujo desde que divergió de la base). Default: `main`.
 - `--staged` → `git diff --name-only --cached` (ignora `--base`).
+- `--repo <path>` → repo objetivo donde correr el diff. Default: `cwd`.
+- **Artefactos de control ignorados por default:** `tasks/**`, `contracts/**`, `verdicts/**`,
+  `.agent-runs/**`. El checker valida el **diff de implementación**; el propio task/contract/verdict no
+  debe producir una violación de ownership. Se reporta cuántos se ignoraron.
+- `--strict-artifacts` → NO ignores esos paths (entonces deben estar en `owns:` o cuentan como violación).
 
 **Salida PASS:**
 ```

@@ -1,11 +1,24 @@
-# VÁLIDO: task de lane db en zona 🟠 (no paralelizable), sin depends_on.
+# VÁLIDO: task de lane db en zona 🟠 (no paralelizable), riesgo medio, sin deps.
 id: db-1
-lane: db
 feature: invoices
-contract: contracts/invoices/
+title: Tabla invoices + índice por tenant
+lane: db
+agent: db
+status: planned
 profile: full
 zones: ["🟠"]
+risk_level: medium
 depends_on: []
 owns:
   - migrations/0007_invoices.sql
-objetivo: Crear la tabla invoices y su índice por tenant.
+contracts: ["contracts/invoices/"]
+gates:
+  audit_f1: required
+  security_f1: required
+  audit_f2: required
+  security_f2: required
+evidence_required:
+  - migration_test
+  - ownership_check
+acceptance_criteria:
+  - La migración crea la tabla invoices con índice por tenant_id.

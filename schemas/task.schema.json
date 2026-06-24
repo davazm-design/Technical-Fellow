@@ -2,30 +2,48 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://parallel-dev-kit/schemas/task.schema.json",
   "title": "Task",
-  "description": "Handoff durable de una tarea (CANON §2.1, §9). Fuente ÚNICA de ownership: el campo owns: es la verdad; ownership.md se deriva. Estos campos viven en el frontmatter YAML (--- ... ---) al inicio de tasks/<id>.md.",
+  "description": "Handoff durable de una tarea (CANON §2.1, §9). Fuente ÚNICA de ownership: el campo owns: es la verdad; ownership.md se deriva. Estos campos viven en el frontmatter YAML (--- ... ---) al inicio de tasks/<id>.md; el cuerpo Markdown queda libre para contexto, plan y notas. NO incluye campos de runtime/event-log (run_id, model, tokens, cost, timestamps, verdicto real, etc.): esos pertenecen al log de ejecución, no al contrato del task.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "lane", "feature", "profile", "zones", "depends_on", "owns", "objetivo"],
+  "required": [
+    "id",
+    "feature",
+    "title",
+    "lane",
+    "agent",
+    "status",
+    "profile",
+    "zones",
+    "risk_level",
+    "depends_on",
+    "owns",
+    "contracts",
+    "gates",
+    "evidence_required",
+    "acceptance_criteria"
+  ],
   "properties": {
     "id": {
       "type": "string",
-      "description": "Identificador estable de la tarea. Convención <lane>-<n> (backend-1) o pre-step nombrado (shared-user-context).",
+      "description": "Identificador estable. Convención <lane>-<n> (backend-1) o pre-step nombrado (shared-user-context).",
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
     },
+    "feature": { "type": "string", "minLength": 1, "description": "Slug del feature." },
+    "title": { "type": "string", "minLength": 1, "description": "Título humano corto de la tarea." },
     "lane": {
       "type": "string",
       "description": "Lane de paralelismo (CANON §1).",
       "enum": ["db", "backend", "frontend"]
     },
-    "feature": {
+    "agent": {
       "type": "string",
-      "description": "Slug del feature al que pertenece la tarea.",
-      "minLength": 1
+      "description": "Rol responsable de ejecutar la tarea (slash command).",
+      "enum": ["architect", "audit", "backend", "db", "deploy", "frontend", "git", "integrator", "orchestrator", "responsive", "security"]
     },
-    "contract": {
+    "status": {
       "type": "string",
-      "description": "Ruta al contrato congelado del que depende (CANON §8).",
-      "pattern": "^contracts/"
+      "description": "Estado del ciclo de vida del task.",
+      "enum": ["draft", "planned", "in_progress", "blocked", "completed", "rejected"]
     },
     "profile": {
       "type": "string",
@@ -39,31 +57,64 @@
       "uniqueItems": true,
       "items": { "type": "string", "enum": ["🟢", "🟠", "🟡"] }
     },
+    "risk_level": {
+      "type": "string",
+      "description": "Nivel de riesgo de la tarea.",
+      "enum": ["low", "medium", "high", "critical"]
+    },
     "depends_on": {
       "type": "array",
       "description": "IDs de tareas de las que depende. Define el orden de merge topológico. [] si independiente.",
       "items": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
       "uniqueItems": true
     },
-    "worktree": {
-      "type": "string",
-      "description": "Ruta del worktree efímero (CANON §2.5)."
-    },
-    "branch": {
-      "type": "string",
-      "description": "Rama de la tarea, ej. backend/backend-1."
-    },
     "owns": {
       "type": "array",
-      "description": "OWNERSHIP EXCLUSIVO. Ningún otro task paralelo toca estos archivos (CANON §9). Fuente única para el ownership map.",
+      "description": "OWNERSHIP EXCLUSIVO (CANON §9). Ningún otro task paralelo toca estos archivos. Fuente única del ownership map. Soporta globs (src/invoices/**).",
       "minItems": 1,
       "uniqueItems": true,
       "items": { "type": "string", "minLength": 1 }
     },
-    "objetivo": {
+    "contracts": {
+      "type": "array",
+      "description": "Rutas a los contratos congelados de los que depende la tarea (CANON §8). [] si no depende de ninguno.",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "gates": {
+      "type": "object",
+      "description": "Gates de validación de la tarea. required: debe correr y pasar. optional: corre si aplica, no bloquea. skipped: omitido explícitamente.",
+      "additionalProperties": false,
+      "required": ["audit_f1", "security_f1", "audit_f2", "security_f2"],
+      "properties": {
+        "audit_f1": { "$ref": "#/$defs/gateValue" },
+        "security_f1": { "$ref": "#/$defs/gateValue" },
+        "audit_f2": { "$ref": "#/$defs/gateValue" },
+        "security_f2": { "$ref": "#/$defs/gateValue" }
+      }
+    },
+    "evidence_required": {
+      "type": "array",
+      "description": "Tipos de evidencia que el cierre debe aportar. Ej.: tests, typecheck, ownership_check, security_review, screenshots, migration_test.",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "description": "Criterios de aceptación verificables (sin juicio subjetivo).",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "notes": {
       "type": "string",
-      "description": "Una frase: qué entrega esta tarea.",
-      "minLength": 1
+      "description": "Notas opcionales (también puede ir en el cuerpo Markdown)."
+    }
+  },
+  "$defs": {
+    "gateValue": {
+      "type": "string",
+      "enum": ["required", "optional", "skipped"]
     }
   }
 }

@@ -93,10 +93,25 @@ caso. Justifica cada `full`.
 
 ### PASO 5 — Emitir artefactos
 
-1. Un `tasks/<lane>-<n>.md` por tarea, usando `templates/task.template.md`. Rellena `owns`, `lane`,
-   `feature`, `contract`, `profile`, `zones`, `depends_on`, `worktree`, `branch`, `objetivo`.
+1. Un `tasks/<lane>-<n>.md` por tarea, usando `templates/task.template.md`. Rellena el frontmatter
+   canónico (`schemas/task.schema.json`): `id`, `feature`, `title`, `lane`, `agent`, `status`,
+   `profile`, `zones`, `risk_level`, `depends_on`, `owns`, `contracts`, `gates`, `evidence_required`,
+   `acceptance_criteria`. NO incluyas campos de runtime/event-log (run_id, model, tokens, timestamps,
+   verdicto real): no pertenecen al task.
 2. `contracts/<feature>/ownership.md` usando `templates/ownership.template.md`: tabla de ownership +
    grafo de dependencias (orden de merge del Integrator).
+
+### PASO 5.5 — Validar cada task por schema (gate, antes de los builders)
+
+Por cada `tasks/<id>.md` emitido, ejecuta:
+
+```bash
+agentkit validate-task tasks/<id>.md
+```
+
+Si **no valida**: corrige el task hasta que `validate-task` pase (exit 0). **Ninguna tarea pasa a los
+builders con un task que no valida** — un task mal formado rompe el handoff durable y los gates
+posteriores. Solo cuando todos los tasks validan, declara la descomposición completa.
 
 ### PASO 6 — Declarar el contract-first pendiente
 
@@ -125,3 +140,4 @@ ADVERTENCIA: ninguna tarea puede iniciar implementación antes de que el contrat
 - No emites tareas con ownership solapado.
 - No marcas como paralelo nada que toque zonas 🟠/🟡.
 - No abres worktrees ni inicias builders antes de que el contrato esté congelado.
+- No entregas a los builders ningún `tasks/<id>.md` que no pase `agentkit validate-task` (PASO 5.5).

@@ -1,16 +1,16 @@
-# INVÁLIDO: campo no permitido `assignee` (additionalProperties:false atrapa typos/campos espurios).
-id: backend-3
+# INVÁLIDO: risk_level fuera del enum (low|medium|high|critical).
+id: backend-5
 feature: invoices
-title: Endpoint pagos
+title: Task con riesgo inválido
 lane: backend
 agent: backend
 status: planned
 profile: lite
 zones: ["🟢"]
-risk_level: low
+risk_level: severe
 depends_on: []
 owns:
-  - src/routes/payments.ts
+  - src/routes/y.ts
 contracts: []
 gates:
   audit_f1: required
@@ -18,5 +18,4 @@ gates:
   audit_f2: required
   security_f2: required
 evidence_required: [tests]
-acceptance_criteria: ["procesa un pago"]
-assignee: claude
+acceptance_criteria: ["algo"]
