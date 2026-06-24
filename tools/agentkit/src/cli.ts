@@ -9,6 +9,7 @@ import { runEvalCommand } from "./commands/eval.js";
 import { runEvaluatePolicies } from "./commands/policy.js";
 import { runCheckApprovals } from "./commands/approval.js";
 import { runIntegrationReport } from "./commands/integration.js";
+import { runIntegrationPlan } from "./commands/integration-plan.js";
 
 const HELP = `agentkit — validadores mecánicos del parallel-dev-kit
 
@@ -32,6 +33,8 @@ uso:
   agentkit validate-integration-report <file> valida un integration-report contra su schema
   agentkit integration-report --feature <id> --tasks <dir> [--verdicts <d>] [--policies <d>]
                  [--approvals <d>] [--repo <p>] [--base <b>] [--now <iso>] [--json]   (SOLO LECTURA)
+  agentkit integration-plan --feature <id> --tasks <dir> [...mismas que integration-report]
+                 plan de merge SUGERIDO (comandos como texto, NO ejecutados)
 
 tipos: ${Object.keys(ARTIFACT_TYPES).join(", ")}
 
@@ -62,6 +65,7 @@ function main(argv: string[]): number {
   if (cmd === "evaluate-policies") return runEvaluatePolicies(rest);
   if (cmd === "check-approvals") return runCheckApprovals(rest);
   if (cmd === "integration-report") return runIntegrationReport(rest);
+  if (cmd === "integration-plan") return runIntegrationPlan(rest);
 
   // Aliases validate-<tipo> (incluye validate-run-event). Va DESPUÉS de validate-run-log/validate-plan.
   if (cmd.startsWith("validate-")) {

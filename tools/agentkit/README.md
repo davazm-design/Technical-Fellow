@@ -262,8 +262,35 @@ Cada check es `pass | fail | skipped`. Exit `0` ready · `1` not ready (con bloc
 operacional (input inválido, dir/verdict/policy/approval inválido). `--now` fija el instante para
 expiración de approvals (determinista).
 
-**E3 vs E4:** E3 solo **dice si está listo** (readiness, solo lectura). E4 (no implementado) propondría
-un **plan de merge** (orden + comandos como texto, nunca ejecutados). E3 nunca ejecuta ni sugiere merge.
+**E3 vs E4:** E3 solo **dice si está listo** (readiness). E4 (`integration-plan`) propone un **plan de
+merge sugerido** (orden + comandos como texto, nunca ejecutados). Ninguno ejecuta merge.
+
+### integration plan sugerido (Bloque E4)
+
+`integration-plan` genera, **a partir del `integration-report`**, un plan de integración **para revisión
+humana**. Reutiliza `buildIntegrationReport` (no duplica readiness). **No crea schema nuevo** (el plan es
+representación derivada). **SOLO LECTURA**: no ejecuta git, no hace merge/push/checkout/pull/deploy, no
+resuelve conflictos, no modifica ramas ni archivos.
+
+```bash
+agentkit integration-plan --feature invoices --tasks tasks/ \
+  [--verdicts verdicts/] [--policies policies/] [--approvals approvals/] \
+  [--repo <path>] [--base main] [--now <iso>] [--json]
+```
+
+- Si `ready=false` → exit **1** + blockers (NO genera plan de merge).
+- Si `ready=true` → imprime: **Prerequisites** (checks), **Suggested merge order** (DAG), **Suggested
+  commands**, **Warnings**, **Human checklist** → exit **0**.
+- Input/operacional inválido → exit **2**.
+
+**Suggested commands** son *strings de texto*, encabezados por `# Suggested only — not executed by
+agentkit`, y usan **placeholders** de branch (`git merge --no-ff <branch-for-backend-1>`) porque el
+**branch mapping aún no está modelado** — reemplázalos manualmente. `--json` entrega
+`{ feature, ready, generated_at, merge_order, suggested_commands, prerequisites, warnings, blockers,
+human_checklist }` (solo el plan sugerido; sin resultado de ejecución, hashes, post-merge ni deploy).
+
+**E4 NO ejecuta nada.** Imprimir el plan no integra el feature: el humano revisa, confirma CI verde y
+corre los comandos manualmente si procede. E5 (docs operativa consolidada) queda pendiente.
 
 ## Exit codes (consistentes en toda la CLI)
 
