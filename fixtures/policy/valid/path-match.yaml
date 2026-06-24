@@ -1,0 +1,10 @@
+id: no-env-files
+title: No tocar archivos .env
+severity: CRITICAL
+status: active
+block_condition: path_match
+applies_to:
+  paths: ["**/.env*", "**/secrets/**"]
+approval_required: formal
+responsible_agent: security
+message: "Los archivos de entorno/secretos no se editan (zona 🔴)."

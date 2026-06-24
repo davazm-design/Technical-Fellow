@@ -1,0 +1,10 @@
+id: high-risk-review
+title: Riesgo alto requiere security review
+severity: HIGH
+status: active
+block_condition: risk_at_least
+applies_to:
+  risk_levels: [high]
+evidence_required: [security_review]
+approval_required: formal
+responsible_agent: security

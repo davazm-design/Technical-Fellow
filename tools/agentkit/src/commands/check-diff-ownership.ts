@@ -16,7 +16,7 @@ const USAGE =
  * propio task/contract/verdict no debe producir una violación de ownership. Con --strict-artifacts
  * se incluyen (y entonces deben estar en `owns` para no violar).
  */
-const CONTROL_ARTIFACTS = ["tasks/**", "contracts/**", "verdicts/**", ".agent-runs/**"];
+const CONTROL_ARTIFACTS = ["tasks/**", "contracts/**", "verdicts/**", ".agent-runs/**", "policies/**", "approvals/**"];
 
 /** Ejecuta check-diff-ownership. Exit: 0 ok, 1 violación/schema, 2 operacional. */
 export function runCheckDiffOwnership(argv: string[]): number {

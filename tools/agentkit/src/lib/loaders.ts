@@ -2,7 +2,7 @@
 // Schema y devuelven el tipo TS GENERADO. Reutilizan loadArtifact + validateData de validate.ts
 // (no duplican la lógica de parseo ni de validación).
 import { loadArtifact, validateData, type ArtifactType } from "./validate.js";
-import type { Task, OwnershipMap, ContractManifest, Verdict, RunEvent } from "../types/index.js";
+import type { Task, OwnershipMap, ContractManifest, Verdict, RunEvent, Policy } from "../types/index.js";
 
 export type LoadResult<T> =
   | { ok: true; data: T; file: string }
@@ -26,3 +26,4 @@ export const loadOwnership = (file: string): LoadResult<OwnershipMap> => load<Ow
 export const loadContract = (file: string): LoadResult<ContractManifest> => load<ContractManifest>("contract", file);
 export const loadVerdict = (file: string): LoadResult<Verdict> => load<Verdict>("verdict", file);
 export const loadRunEvent = (file: string): LoadResult<RunEvent> => load<RunEvent>("run-event", file);
+export const loadPolicy = (file: string): LoadResult<Policy> => load<Policy>("policy", file);

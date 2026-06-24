@@ -7,6 +7,8 @@ import { REPO_ROOT, validateArtifact } from "./validate.js";
 import { classifyDiff } from "./ownership.js";
 import { analyzePlan, planIsValid } from "./dag.js";
 import { validateRunLog } from "./runlog.js";
+import { evaluatePolicies } from "./policy.js";
+import type { Task, Policy } from "../types/index.js";
 
 export const CASES_DIR = path.join(REPO_ROOT, "evals", "cases");
 
@@ -46,6 +48,22 @@ interface CaseDef {
 }
 
 const fx = (rel: string) => path.join(CASES_DIR, rel);
+
+// Helpers para casos de policy (deterministas, en memoria — sin git ni IO).
+function evalTask(over: Partial<Task> = {}): Task {
+  return {
+    id: "backend-1", feature: "eval", title: "eval task", lane: "backend", agent: "backend",
+    status: "planned", profile: "lite", zones: ["🟢"], risk_level: "low", depends_on: [],
+    owns: ["src/eval/x.ts"], contracts: [],
+    gates: { audit_f1: "required", security_f1: "required", audit_f2: "optional", security_f2: "optional" },
+    evidence_required: ["tests"], acceptance_criteria: ["x"], ...over,
+  } as Task;
+}
+function evalPolicy(over: Partial<Policy>): Policy {
+  return { id: "p", title: "p", severity: "HIGH", status: "active", block_condition: "zone_touch",
+    approval_required: "none", responsible_agent: "security", ...over } as Policy;
+}
+const active = (ps: Policy[]) => ps.filter((p) => p.status === "active");
 
 const CASE_DEFS: CaseDef[] = [
   {
@@ -141,6 +159,68 @@ const CASE_DEFS: CaseDef[] = [
     run: () => {
       const r = validateRunLog(fx("run-log-invalid.jsonl"));
       return { command_or_check: "validateRunLog", expected: "rechazado", actual: r.ok ? "aceptado (LEAK)" : "rechazado", passed: !r.ok, message: r.ok ? "un run log inválido NO fue rechazado" : "" };
+    },
+  },
+  {
+    id: "policy-pass",
+    category: "policy",
+    metric: "policy_pass_rate",
+    requires: [],
+    run: () => {
+      const t = evalTask({ owns: ["src/feature/x.ts"] });
+      const ps = [evalPolicy({ id: "no-env", severity: "CRITICAL", block_condition: "path_match", applies_to: { paths: ["**/.env*"] } })];
+      const r = evaluatePolicies(t, active(ps), { candidatePaths: t.owns });
+      return { command_or_check: "evaluatePolicies", expected: "sin bloqueo", actual: r.ok ? "ok" : "bloqueado", passed: r.ok, message: r.ok ? "" : "falso bloqueo de policy" };
+    },
+  },
+  {
+    id: "policy-draft-ignored",
+    category: "policy",
+    metric: "policy_pass_rate",
+    requires: [],
+    run: () => {
+      const t = evalTask({ owns: ["src/feature/x.ts"] });
+      // policy DRAFT que bloquearía todo si estuviera activa
+      const ps = [evalPolicy({ id: "draft", status: "draft", severity: "CRITICAL", block_condition: "path_match", applies_to: { paths: ["**/*"] } })];
+      const r = evaluatePolicies(t, active(ps), { candidatePaths: t.owns });
+      return { command_or_check: "evaluatePolicies (draft excluida)", expected: "draft ignorada → sin bloqueo", actual: r.ok ? "ok" : "bloqueado", passed: r.ok, message: r.ok ? "" : "una policy draft bloqueó" };
+    },
+  },
+  {
+    id: "policy-block-path",
+    category: "policy",
+    metric: "policy_block_rate",
+    requires: [],
+    run: () => {
+      const t = evalTask({ owns: [".env.production"] });
+      const ps = [evalPolicy({ id: "no-env", severity: "CRITICAL", block_condition: "path_match", applies_to: { paths: ["**/.env*"] } })];
+      const r = evaluatePolicies(t, active(ps), { candidatePaths: t.owns });
+      return { command_or_check: "evaluatePolicies", expected: "bloquea (path)", actual: r.ok ? "no bloqueó (LEAK)" : "bloqueado", passed: !r.ok, message: r.ok ? "no bloqueó un path prohibido" : "" };
+    },
+  },
+  {
+    id: "policy-block-missing-evidence",
+    category: "policy",
+    metric: "policy_block_rate",
+    requires: [],
+    run: () => {
+      const t = evalTask({ evidence_required: ["tests"] });
+      const ps = [evalPolicy({ id: "need-secrev", severity: "HIGH", block_condition: "missing_evidence", evidence_required: ["security_review"] })];
+      const r = evaluatePolicies(t, active(ps), { candidatePaths: t.owns });
+      return { command_or_check: "evaluatePolicies", expected: "bloquea (missing_evidence)", actual: r.ok ? "no bloqueó (LEAK)" : "bloqueado", passed: !r.ok, message: r.ok ? "no detectó evidencia faltante" : "" };
+    },
+  },
+  {
+    id: "policy-secret-detected",
+    category: "policy",
+    metric: "policy_block_rate",
+    requires: [],
+    run: () => {
+      const t = evalTask({ owns: ["src/config.ts"] });
+      const ps = [evalPolicy({ id: "no-secrets", severity: "CRITICAL", block_condition: "secret_pattern" })];
+      const contents = new Map<string, string>([["src/config.ts", 'const k = "AKIA1234567890ABCDEF";']]);
+      const r = evaluatePolicies(t, active(ps), { candidatePaths: t.owns, fileContents: contents });
+      return { command_or_check: "evaluatePolicies (secret scan)", expected: "bloquea (secret)", actual: r.ok ? "no detectó (LEAK)" : "bloqueado", passed: !r.ok, message: r.ok ? "no detectó secret-like pattern" : "" };
     },
   },
 ];

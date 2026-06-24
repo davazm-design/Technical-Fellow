@@ -1,0 +1,9 @@
+id: contractual-zone-guard
+title: Cambios en zona contractual requieren aprobación
+severity: HIGH
+status: active
+block_condition: zone_touch
+applies_to:
+  zones: ["🟠"]
+approval_required: formal
+responsible_agent: audit

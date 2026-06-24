@@ -169,6 +169,17 @@ describe.skipIf(!isGitAvailable())("check-diff-ownership — end to end", () => 
     expect(out.join("")).toContain("artefacto(s) de control ignorado");
   });
 
+  it("ignora policies/** y approvals/** por default → PASS", () => {
+    writeFile(dir, "policies/no-secrets.yaml", "id: x\n");
+    writeFile(dir, "approvals/f/a.yaml", "approval_id: x\n");
+    g(dir, ["add", "policies", "approvals"]);
+    g(dir, ["commit", "-m", "control artifacts"]);
+    const task = writeTask(["src/**"]);
+    const code = runCheckDiffOwnership(["--task", task, "--base", "main"]);
+    expect(code).toBe(0);
+    expect(out.join("")).toContain("artefacto(s) de control ignorado");
+  });
+
   it("--strict-artifacts hace que tasks/** viole si no está en owns → FAIL", () => {
     writeFile(dir, "tasks/backend-1.md", "---\nx: 1\n---\n");
     g(dir, ["add", "tasks"]);

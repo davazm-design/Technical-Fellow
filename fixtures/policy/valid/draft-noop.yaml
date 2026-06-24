@@ -1,0 +1,9 @@
+id: future-rule
+title: Regla en borrador (no bloquea por default)
+severity: CRITICAL
+status: draft
+block_condition: path_match
+applies_to:
+  paths: ["**/*"]
+approval_required: formal
+responsible_agent: security
