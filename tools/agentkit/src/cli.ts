@@ -4,6 +4,7 @@ import { runValidate } from "./commands/validate.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runCheckDiffOwnership } from "./commands/check-diff-ownership.js";
 import { runValidateRunLog, runAppendRunEvent } from "./commands/run-log.js";
+import { runGraph, runStatus, runNext, runValidatePlan } from "./commands/orchestrate.js";
 
 const HELP = `agentkit — validadores mecánicos del parallel-dev-kit
 
@@ -15,6 +16,10 @@ uso:
                  [--base <branch> | --staged] [--repo <path>] [--strict-artifacts]
   agentkit validate-run-log <file.jsonl>      valida un run log JSONL (un run-event por línea)
   agentkit append-run-event --log <f> --event <e.json>   añade (append-only) un evento validado
+  agentkit graph --tasks <dir> [--json]       DAG: tasks, deps, orden topológico, bloqueos
+  agentkit status --tasks <dir> [--json]      resumen del plan (ready/blocked/ciclos/…)
+  agentkit next --tasks <dir> [--json]        tasks listas para ejecutar
+  agentkit validate-plan --tasks <dir>        valida todo el plan (schema + DAG)
 
 tipos: ${Object.keys(ARTIFACT_TYPES).join(", ")}
 
@@ -37,8 +42,12 @@ function main(argv: string[]): number {
   if (cmd === "check-diff-ownership") return runCheckDiffOwnership(rest);
   if (cmd === "validate-run-log") return runValidateRunLog(rest);
   if (cmd === "append-run-event") return runAppendRunEvent(rest);
+  if (cmd === "graph") return runGraph(rest);
+  if (cmd === "status") return runStatus(rest);
+  if (cmd === "next") return runNext(rest);
+  if (cmd === "validate-plan") return runValidatePlan(rest);
 
-  // Aliases validate-<tipo> (incluye validate-run-event). Va DESPUÉS de validate-run-log.
+  // Aliases validate-<tipo> (incluye validate-run-event). Va DESPUÉS de validate-run-log/validate-plan.
   if (cmd.startsWith("validate-")) {
     const type = cmd.slice("validate-".length);
     return runValidate([type, ...rest]);

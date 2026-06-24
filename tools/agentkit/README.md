@@ -120,6 +120,26 @@ agentkit append-run-event   --log runs/.../run.jsonl --event event.json   # vali
 - `append-run-event` **valida antes de escribir**: un evento inválido NO se añade (exit 1).
 - `validate-run-log` reporta errores con número de línea; ignora líneas en blanco.
 
+### orquestador mínimo DAG (Bloque D2)
+
+Orquestador **de solo lectura**: carga las tasks de un directorio, las valida contra
+`task.schema.json` y analiza el grafo de `depends_on`. **No ejecuta builders, no escribe código, no
+commitea, no mergea.** El directorio debe contener solo archivos de task (`.md`/`.yaml`/`.json`).
+
+```bash
+agentkit graph         --tasks tasks/ [--json]   # tasks, deps, orden topológico, bloqueos
+agentkit status        --tasks tasks/ [--json]   # resumen: total/valid/invalid/ready/blocked/ciclos/…
+agentkit next          --tasks tasks/ [--json]   # solo tasks listas para ejecutar
+agentkit validate-plan --tasks tasks/            # valida todo el plan (schema + DAG)
+```
+
+Detecta: orden topológico, **ciclos** (con ruta legible `a → b → a`), **dependencias faltantes**,
+**ids duplicados**, tasks **bloqueadas** y tasks **listas**. Una task que no valida **bloquea el plan**.
+
+`next` solo devuelve tasks con `status` ∈ {`draft`,`planned`} cuyas `depends_on` están **todas
+`completed`**; nunca `blocked`/`rejected`/`completed`. Si el plan es estructuralmente inválido
+(ciclo/missing/duplicado/task inválida), `next` falla (exit 1) en vez de adivinar.
+
 ## Exit codes (consistentes en toda la CLI)
 
 | Code | Significado |
