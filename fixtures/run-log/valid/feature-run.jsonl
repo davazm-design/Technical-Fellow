@@ -1,0 +1,7 @@
+{"run_id":"run-2026-06-24-invoices-01","timestamp":"2026-06-24T10:00:00Z","event_type":"run_started","severity":"info","feature_id":"invoices","agent_id":"orchestrator","message":"inicio del feature"}
+{"run_id":"run-2026-06-24-invoices-01","timestamp":"2026-06-24T10:01:00Z","event_type":"agent_invoked","severity":"info","feature_id":"invoices","task_id":"backend-1","agent_id":"architect"}
+{"run_id":"run-2026-06-24-invoices-01","timestamp":"2026-06-24T10:05:00Z","event_type":"artifact_created","severity":"info","task_id":"backend-1","output_refs":["tasks/backend-1.md"]}
+{"run_id":"run-2026-06-24-invoices-01","timestamp":"2026-06-24T10:06:00Z","event_type":"validation_passed","severity":"info","task_id":"backend-1","evidence_refs":["agentkit validate-task"]}
+{"run_id":"run-2026-06-24-invoices-01","timestamp":"2026-06-24T11:05:00Z","event_type":"gate_blocked","severity":"warning","task_id":"backend-1","agent_id":"security","message":"falta rate-limit","evidence_refs":["verdicts/backend-1/security.yaml"]}
+{"run_id":"run-2026-06-24-invoices-01","timestamp":"2026-06-24T12:00:00Z","event_type":"task_completed","severity":"info","task_id":"backend-1"}
+{"run_id":"run-2026-06-24-invoices-01","timestamp":"2026-06-24T12:30:00Z","event_type":"run_completed","severity":"info","feature_id":"invoices","message":"feature cerrado"}

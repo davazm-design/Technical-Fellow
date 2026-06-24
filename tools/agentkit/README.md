@@ -101,6 +101,25 @@ Sugerencia:
 Agrega el path al `owns` del task, o separa el cambio en otra task (CANON §9: ownership disjunto).
 ```
 
+### run logs JSONL (trazabilidad — Bloque D1)
+
+Un run log es un archivo **JSONL**: una línea = un evento que valida contra `schemas/run-event.schema.json`
+(CANON §10). Append-only; sin secretos ni PII (el schema es cerrado).
+
+```bash
+agentkit validate-run-event runs/2026-06-24/event.json     # un evento suelto
+agentkit validate-run-log   runs/2026-06-24/run.jsonl       # log completo (valida cada línea)
+agentkit append-run-event   --log runs/.../run.jsonl --event event.json   # valida y añade 1 línea
+```
+
+- `event_type` ∈ `run_started, agent_invoked, artifact_created, validation_passed, validation_failed,
+  gate_blocked, task_completed, run_completed` (+ `human_approval_*`, `integration_*` reservados).
+- Campos: `run_id`, `timestamp`, `event_type` (requeridos); `severity`, `agent_id`, `task_id`,
+  `feature_id`, `input_refs`, `output_refs`, `evidence_refs`, `message` (opcionales). `tokens`, `cost_usd`,
+  `duration_ms` opcionales y fuera de uso por ahora.
+- `append-run-event` **valida antes de escribir**: un evento inválido NO se añade (exit 1).
+- `validate-run-log` reporta errores con número de línea; ignora líneas en blanco.
+
 ## Exit codes (consistentes en toda la CLI)
 
 | Code | Significado |

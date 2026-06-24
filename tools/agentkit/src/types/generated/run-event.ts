@@ -21,9 +21,14 @@ export interface RunEvent {
     | "human_approval_requested"
     | "human_approval_granted"
     | "task_completed"
+    | "run_completed"
     | "integration_started"
     | "integration_failed"
     | "integration_completed";
+  /**
+   * Mensaje humano corto del evento (sin secretos ni PII).
+   */
+  message?: string;
   severity?: "debug" | "info" | "warning" | "error" | "critical";
   agent_id?: string;
   task_id?: string;

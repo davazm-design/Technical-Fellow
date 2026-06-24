@@ -3,15 +3,18 @@ import { ARTIFACT_TYPES } from "./lib/validate.js";
 import { runValidate } from "./commands/validate.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runCheckDiffOwnership } from "./commands/check-diff-ownership.js";
+import { runValidateRunLog, runAppendRunEvent } from "./commands/run-log.js";
 
 const HELP = `agentkit — validadores mecánicos del parallel-dev-kit
 
 uso:
   agentkit validate <tipo> <archivo>          valida un artefacto contra su JSON Schema
   agentkit validate-<tipo> <archivo>          alias por tipo (ej. validate-task)
-  agentkit doctor                             diagnóstico del kit (schemas, fixtures, git, instalación)
+  agentkit doctor                             diagnóstico del kit
   agentkit check-diff-ownership --task <f>    compara el diff de git contra el owns: del task
-                 [--base <branch> | --staged]
+                 [--base <branch> | --staged] [--repo <path>] [--strict-artifacts]
+  agentkit validate-run-log <file.jsonl>      valida un run log JSONL (un run-event por línea)
+  agentkit append-run-event --log <f> --event <e.json>   añade (append-only) un evento validado
 
 tipos: ${Object.keys(ARTIFACT_TYPES).join(", ")}
 
@@ -19,13 +22,6 @@ exit codes:
   0  validación correcta
   1  violación de ownership o artefacto inválido
   2  error operacional (uso incorrecto, git ausente, base inexistente, archivo no encontrado)
-
-ejemplos:
-  agentkit validate task tasks/backend-1.md
-  agentkit validate-verdict verdicts/backend-1/plan.yaml
-  agentkit doctor
-  agentkit check-diff-ownership --task tasks/backend-1.md --base main
-  agentkit check-diff-ownership --task tasks/backend-1.md --staged
 `;
 
 function main(argv: string[]): number {
@@ -39,8 +35,10 @@ function main(argv: string[]): number {
   if (cmd === "validate") return runValidate(rest);
   if (cmd === "doctor") return runDoctor();
   if (cmd === "check-diff-ownership") return runCheckDiffOwnership(rest);
+  if (cmd === "validate-run-log") return runValidateRunLog(rest);
+  if (cmd === "append-run-event") return runAppendRunEvent(rest);
 
-  // Aliases: validate-task, validate-ownership, validate-contract, validate-verdict, validate-run-event
+  // Aliases validate-<tipo> (incluye validate-run-event). Va DESPUÉS de validate-run-log.
   if (cmd.startsWith("validate-")) {
     const type = cmd.slice("validate-".length);
     return runValidate([type, ...rest]);
