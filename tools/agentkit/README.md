@@ -92,7 +92,65 @@ npm test          # vitest run
 npm run typecheck # tsc --noEmit
 ```
 
-## Limitaciones conocidas (Bloque B)
+## Tipos generados (fuente canónica = los JSON Schema)
+
+Los tipos TS se **generan desde `schemas/`** con `json-schema-to-typescript`; no se escriben a mano,
+para que no diverjan del schema.
+
+```bash
+npm run generate:types
+```
+
+- Salida: `src/types/generated/*.ts` (uno por schema). **Archivos generados — NO editar a mano**
+  (llevan el banner correspondiente). Si cambias un schema, regenera y commitea.
+- Import único: `import type { Task, OwnershipMap, ContractManifest, Verdict, RunEvent } from "../types/index.js"`.
+- El barrel `src/types/index.ts` sí es manual (sólo re-exporta).
+
+## Loaders / parsers
+
+`src/lib/loaders.ts` centraliza carga + validación + tipado. Cada loader carga el archivo
+(YAML / JSON / Markdown con frontmatter), valida contra el schema y devuelve el tipo generado:
+
+```ts
+import { loadTask } from "../lib/loaders.js";
+const r = loadTask("tasks/backend-1.md");
+if (r.ok) r.data.owns;          // string[] tipado
+else      r.errors;             // mensajes accionables
+```
+
+Loaders: `loadTask`, `loadOwnership`, `loadContract`, `loadVerdict`, `loadRunEvent`. Reutilizan
+`loadArtifact` + `validateData` de `validate.ts` (no duplican parseo ni validación). `check-diff-ownership`
+ya usa `loadTask`.
+
+## CI
+
+El workflow `.github/workflows/agentkit.yml` corre en `push` a `main` y en cada `pull_request`. Pasos
+(equivalentes locales entre paréntesis):
+
+| Paso CI | Local | Falla si… |
+|---|---|---|
+| Install | `npm ci` | deps no instalables |
+| Drift de tipos | `npm run generate:types` + `git diff --exit-code -- src/types/generated` | los tipos generados no coinciden con los schemas |
+| Typecheck | `npm run typecheck` | error de tipos |
+| Tests | `npm test` | test falla / fixture válido no valida / inválido pasa / check-diff no da el exit esperado |
+| Doctor | `npm run -s agentkit -- doctor` | falta schema/fixture/instalación/git |
+| Fixtures (CLI) | `npm run validate:fixtures` | un fixture válido no valida o uno inválido pasa |
+| Self-test ownership | `npm run selftest:ownership` | exit codes de check-diff incorrectos |
+
+Atajo local que replica el CI (sin el drift gate): `npm run ci`.
+
+**Cómo interpretar fallos típicos:**
+- *"tipos desincronizados"* → corre `npm run generate:types` y commitea `src/types/generated/`.
+- *Doctor FAIL* → mira qué check (✗) falló; suele ser `node_modules` (corre `npm ci`) o un schema movido.
+- *validate:fixtures FAIL* → un schema cambió y un fixture quedó obsoleto: ajusta el fixture o el schema.
+- *selftest:ownership FAIL* → regresión en `check-diff-ownership` o en los helpers de git.
+
+## Punto de parada recomendado
+
+Tras este bloque (CI + tipos + loaders) el siguiente paso recomendado es **validar el sistema con un
+feature piloto real** antes de avanzar a event logs / orquestador (Bloque D).
+
+## Limitaciones conocidas (Bloques B–C)
 
 - `check-diff-ownership` detecta archivos tocados **fuera** del scope, no la **sub-declaración** de un
   archivo de integración que nadie listó y que aún no está en el diff (CANON §9 / blind_spots BS-6:

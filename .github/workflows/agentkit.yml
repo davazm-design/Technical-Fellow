@@ -1,0 +1,50 @@
+name: agentkit
+
+# CI del kit. No depende de servicios externos. Falla si: tests fallan, typecheck falla,
+# doctor falla, un fixture válido no valida, un fixture inválido pasa, check-diff-ownership
+# no produce los exit codes esperados, o los tipos generados están desincronizados de los schemas.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  agentkit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/agentkit
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: tools/agentkit/package-lock.json
+
+      - name: Install (npm ci)
+        run: npm ci
+
+      - name: Tipos generados al día (drift gate)
+        # Regenera desde los schemas (fuente canónica) y exige que coincidan con lo commiteado.
+        run: |
+          npm run generate:types
+          git diff --exit-code -- src/types/generated \
+            || (echo "::error::tipos desincronizados: corre 'npm run generate:types' y commitea." && exit 1)
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests (vitest — incluye fixtures válidos/ inválidos y check-diff PASS/FAIL/exit2)
+        run: npm test
+
+      - name: Doctor
+        run: npm run -s agentkit -- doctor
+
+      - name: Validación de fixtures (CLI gate)
+        run: npm run validate:fixtures
+
+      - name: Self-test de check-diff-ownership (exit codes reales)
+        run: npm run selftest:ownership
