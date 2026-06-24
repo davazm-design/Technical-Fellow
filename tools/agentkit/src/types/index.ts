@@ -5,3 +5,4 @@ export type { OwnershipMap } from "./generated/ownership.js";
 export type { ContractManifest } from "./generated/contract.js";
 export type { Verdict } from "./generated/verdict.js";
 export type { RunEvent } from "./generated/run-event.js";
+export type { Policy } from "./generated/policy.js";

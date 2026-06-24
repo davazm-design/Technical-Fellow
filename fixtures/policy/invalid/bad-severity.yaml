@@ -1,0 +1,8 @@
+id: bad-sev
+title: severity fuera del enum
+severity: BLOCKER
+status: active
+block_condition: zone_touch
+applies_to: { zones: ["🟠"] }
+approval_required: formal
+responsible_agent: security

@@ -18,6 +18,7 @@ const TARGETS = [
   { schema: "contract.schema.json", out: "contract.ts" },
   { schema: "verdict.schema.json", out: "verdict.ts" },
   { schema: "run-event.schema.json", out: "run-event.ts" },
+  { schema: "policy.schema.json", out: "policy.ts" },
 ];
 
 async function main(): Promise<void> {

@@ -1,0 +1,8 @@
+id: bad-approval
+title: approval_required fuera del enum
+severity: HIGH
+status: active
+block_condition: zone_touch
+applies_to: { zones: ["🟠"] }
+approval_required: maybe
+responsible_agent: security

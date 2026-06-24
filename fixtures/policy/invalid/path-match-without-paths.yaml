@@ -1,0 +1,8 @@
+# block_condition path_match exige applies_to.paths (allOf if/then)
+id: incomplete-path
+title: path_match sin paths
+severity: HIGH
+status: active
+block_condition: path_match
+approval_required: formal
+responsible_agent: security

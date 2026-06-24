@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parallel-dev-kit/schemas/policy.schema.json",
+  "title": "Policy",
+  "description": "Regla de gobernanza declarativa y evaluable (E1). Cross-cutting: aplica por globs, zonas o risk_level y puede exigir evidencia o aprobación. NO es un motor de reglas: una policy = una condición de bloqueo. Severidad reusa la del verdict (CRITICAL/HIGH/MEDIUM/LOW). Sin DSL, sin auto-remediation, sin hooks de runtime, sin supresiones.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "severity", "status", "block_condition", "approval_required", "responsible_agent"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "Identificador estable de la policy." },
+    "title": { "type": "string", "minLength": 1 },
+    "severity": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"] },
+    "status": { "type": "string", "enum": ["active", "draft"], "description": "Solo las active se evalúan por default." },
+    "applies_to": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Ámbito de aplicación. Vacío = no acota por sí mismo (la condición decide).",
+      "properties": {
+        "paths": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Globs (picomatch)." },
+        "zones": { "type": "array", "items": { "type": "string", "enum": ["🔴", "🟠", "🟡", "🟢"] }, "uniqueItems": true },
+        "risk_levels": { "type": "array", "items": { "type": "string", "enum": ["low", "medium", "high", "critical"] }, "uniqueItems": true }
+      }
+    },
+    "block_condition": {
+      "type": "string",
+      "description": "Condición única que dispara la policy.",
+      "enum": ["path_match", "zone_touch", "risk_at_least", "missing_evidence", "secret_pattern"]
+    },
+    "evidence_required": {
+      "type": "array",
+      "description": "Evidencia exigida (para block_condition=missing_evidence). Ej.: tests, security_review.",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "secret_patterns": {
+      "type": "array",
+      "description": "Regex extra para block_condition=secret_pattern. Si se omite, se usan heurísticas básicas internas (best-effort).",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "approval_required": { "type": "string", "enum": ["none", "nominal", "formal"] },
+    "responsible_agent": {
+      "type": "string",
+      "enum": ["architect", "audit", "backend", "db", "deploy", "frontend", "git", "integrator", "orchestrator", "responsive", "security"]
+    },
+    "message": { "type": "string", "description": "Acción requerida / explicación humana." }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "block_condition": { "const": "path_match" } } },
+      "then": { "required": ["applies_to"], "properties": { "applies_to": { "required": ["paths"] } } }
+    },
+    {
+      "if": { "properties": { "block_condition": { "const": "zone_touch" } } },
+      "then": { "required": ["applies_to"], "properties": { "applies_to": { "required": ["zones"] } } }
+    },
+    {
+      "if": { "properties": { "block_condition": { "const": "risk_at_least" } } },
+      "then": { "required": ["applies_to"], "properties": { "applies_to": { "required": ["risk_levels"] } } }
+    },
+    {
+      "if": { "properties": { "block_condition": { "const": "missing_evidence" } } },
+      "then": { "required": ["evidence_required"], "properties": { "evidence_required": { "minItems": 1 } } }
+    }
+  ]
+}

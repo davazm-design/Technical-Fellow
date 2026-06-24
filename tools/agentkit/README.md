@@ -169,6 +169,41 @@ integración interna). Los **evals** verifican que las *capacidades de producto*
 violaciones, ordenar el DAG, validar logs) se comportan correctamente de extremo a extremo — incluyendo
 que los casos negativos se bloqueen. Ambos corren en `npm run ci`.
 
+### security policies (Bloque E1)
+
+Policies **declarativas** (`policies/*.yaml`, schema `policy.schema.json`): una policy = **una**
+condición de bloqueo. No hay motor de reglas, ni approvals (E2), ni integrator (E3+). Severidad reusa
+la del verdict (`CRITICAL/HIGH/MEDIUM/LOW`).
+
+```bash
+agentkit validate-policy policies/no-secrets.yaml
+agentkit evaluate-policies --task tasks/backend-1.md --policies policies/ [--repo <path>] [--threshold HIGH]
+```
+
+**Crear una policy** (campos: `id`, `title`, `severity`, `status`, `block_condition`, `approval_required`,
+`responsible_agent`; opcionales `applies_to`, `evidence_required`, `secret_patterns`, `message`):
+
+```yaml
+id: no-secrets
+title: Sin secretos en el diff
+severity: CRITICAL
+status: active            # solo las 'active' se evalúan; 'draft' se ignora por default
+block_condition: secret_pattern   # path_match | zone_touch | risk_at_least | missing_evidence | secret_pattern
+approval_required: formal
+responsible_agent: security
+```
+
+**Evaluación** (`evaluate-policies`):
+- carga y valida el task (task inválido → exit 1); carga las policies (dir inexistente o policy inválida → exit 2).
+- ignora `status: draft`; evalúa solo `active`.
+- bloqueo: **secretos/zona prohibida = bloqueo duro siempre**; el resto bloquea si `severity ≥ --threshold` (default `HIGH`).
+- `path_match` cruza `applies_to.paths` (globs) contra `owns` (+ diff si `--repo`). `secret_pattern` solo escanea
+  contenido con `--repo`; **es heurístico/best-effort y NUNCA afirma ausencia de secretos**.
+- exit `0` sin bloqueo · `1` policy bloqueante · `2` operacional.
+
+**E1 NO incluye** approvals formales (E2) ni integrator (E3+); `policies/**` y `approvals/**` se ignoran
+por default en `check-diff-ownership`.
+
 ## Exit codes (consistentes en toda la CLI)
 
 | Code | Significado |
