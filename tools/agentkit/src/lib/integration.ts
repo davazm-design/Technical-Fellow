@@ -181,3 +181,65 @@ export function buildIntegrationReport(opts: ReportOptions): IntegrationReport {
     tasks,
   };
 }
+
+// --- E4: integration plan SUGERIDO (texto, NO ejecutable) ---
+
+const SUGGESTED_HEADER = "Suggested only — not executed by agentkit";
+
+const PLAN_WARNINGS = [
+  "Branch mapping is not yet modeled; replace placeholders manually.",
+  "Los comandos son sugerencias para revisión humana.",
+  "agentkit no ejecutó ningún comando.",
+  "El humano debe confirmar CI verde antes de integrar.",
+  "El humano debe revisar conflictos manualmente.",
+];
+
+const HUMAN_CHECKLIST = [
+  "Revisar integration-report.",
+  "Confirmar que ready=true.",
+  "Revisar que blockers esté vacío.",
+  "Confirmar CI verde.",
+  "Revisar PRs o ramas.",
+  "Confirmar que no hay conflictos.",
+  "Ejecutar comandos manualmente solo si procede.",
+  "Detenerse si aparece cualquier fallo.",
+];
+
+/** Comandos SUGERIDOS como texto. NUNCA se ejecutan ni se pasan a shell. Branch = placeholder. */
+function suggestedCommands(mergeOrder: string[]): string[] {
+  const cmds = [`# ${SUGGESTED_HEADER}`, "git checkout main", "git pull --ff-only"];
+  for (const id of mergeOrder) cmds.push(`git merge --no-ff <branch-for-${id}>`);
+  cmds.push("npm test", "npm run typecheck");
+  return cmds;
+}
+
+export interface IntegrationPlan {
+  feature: string;
+  ready: boolean;
+  generated_at: string;
+  merge_order: string[];
+  suggested_commands: string[];
+  prerequisites: { name: string; status: string }[];
+  warnings: string[];
+  blockers: string[];
+  human_checklist: string[];
+}
+
+/**
+ * Construye un plan de integración SUGERIDO a partir del integration-report (E4). Solo lectura:
+ * no ejecuta git, no escribe, no modifica ramas. Los comandos son texto para revisión humana.
+ */
+export function buildIntegrationPlan(opts: ReportOptions): IntegrationPlan {
+  const report = buildIntegrationReport(opts);
+  return {
+    feature: report.feature,
+    ready: report.ready,
+    generated_at: report.generated_at,
+    merge_order: report.merge_order,
+    suggested_commands: suggestedCommands(report.merge_order),
+    prerequisites: report.checks.map((c) => ({ name: c.name, status: c.status })),
+    warnings: PLAN_WARNINGS,
+    blockers: report.blockers,
+    human_checklist: HUMAN_CHECKLIST,
+  };
+}

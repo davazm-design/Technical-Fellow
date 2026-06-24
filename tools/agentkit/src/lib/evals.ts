@@ -9,7 +9,7 @@ import { analyzePlan, planIsValid } from "./dag.js";
 import { validateRunLog } from "./runlog.js";
 import { evaluatePolicies } from "./policy.js";
 import { requiredApproval, checkApprovals } from "./approval.js";
-import { buildIntegrationReport } from "./integration.js";
+import { buildIntegrationReport, buildIntegrationPlan } from "./integration.js";
 import type { Task, Policy, Approval } from "../types/index.js";
 
 const INTEG = (name: string) => path.join(REPO_ROOT, "fixtures", "integration", name);
@@ -347,6 +347,27 @@ const CASE_DEFS: CaseDef[] = [
     run: () => {
       const r = buildIntegrationReport({ feature: "demo", tasksDir: INTEG("approval-missing/tasks"), now: EVAL_NOW });
       return { command_or_check: "buildIntegrationReport", expected: "not ready (approval)", actual: r.ready ? "ready (LEAK)" : "not ready", passed: !r.ready, message: r.ready ? "no bloqueó approval faltante" : "" };
+    },
+  },
+  {
+    id: "integration-plan-ready-pass",
+    category: "integration-plan",
+    metric: "integration_plan_rate",
+    requires: [],
+    run: () => {
+      const p = buildIntegrationPlan({ feature: "demo", tasksDir: INTEG("ready/tasks"), verdictsDir: INTEG("ready/verdicts"), now: EVAL_NOW });
+      const passed = p.ready && p.suggested_commands.some((c) => c.includes("git merge --no-ff <branch-for-")) && p.warnings.length > 0;
+      return { command_or_check: "buildIntegrationPlan", expected: "plan con comandos texto + warnings", actual: p.ready ? "plan generado" : "not ready", passed, message: passed ? "" : "no generó plan sugerido válido" };
+    },
+  },
+  {
+    id: "integration-plan-not-ready-blocks",
+    category: "integration-plan",
+    metric: "integration_plan_rate",
+    requires: [],
+    run: () => {
+      const p = buildIntegrationPlan({ feature: "demo", tasksDir: INTEG("approval-missing/tasks"), now: EVAL_NOW });
+      return { command_or_check: "buildIntegrationPlan", expected: "bloquea (not ready)", actual: p.ready ? "ready (LEAK)" : "not ready", passed: !p.ready && p.blockers.length > 0, message: p.ready ? "generó plan pese a no estar ready" : "" };
     },
   },
 ];
