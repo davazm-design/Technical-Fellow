@@ -9,7 +9,10 @@ import { analyzePlan, planIsValid } from "./dag.js";
 import { validateRunLog } from "./runlog.js";
 import { evaluatePolicies } from "./policy.js";
 import { requiredApproval, checkApprovals } from "./approval.js";
+import { buildIntegrationReport } from "./integration.js";
 import type { Task, Policy, Approval } from "../types/index.js";
+
+const INTEG = (name: string) => path.join(REPO_ROOT, "fixtures", "integration", name);
 
 export const CASES_DIR = path.join(REPO_ROOT, "evals", "cases");
 
@@ -294,6 +297,56 @@ const CASE_DEFS: CaseDef[] = [
       const r = checkApprovals(t, "eval", [evalApproval({ feature_id: "eval", approval_type: "formal" })], req, EVAL_NOW);
       const passed = req.level === "formal" && r.ok;
       return { command_or_check: "requiredApproval+checkApprovals", expected: "policy exige formal → satisfecho", actual: `req=${req.level}, ${r.ok ? "ok" : "bloqueado"}`, passed, message: passed ? "" : "policy formal no derivó requerimiento o no se satisfizo" };
+    },
+  },
+  {
+    id: "integration-ready-pass",
+    category: "integration",
+    metric: "integration_readiness_rate",
+    requires: [],
+    run: () => {
+      const r = buildIntegrationReport({ feature: "demo", tasksDir: INTEG("ready/tasks"), verdictsDir: INTEG("ready/verdicts"), now: EVAL_NOW });
+      return { command_or_check: "buildIntegrationReport", expected: "ready", actual: r.ready ? "ready" : "not ready", passed: r.ready, message: r.ready ? "" : r.blockers.join("; ") };
+    },
+  },
+  {
+    id: "integration-task-not-completed-blocks",
+    category: "integration",
+    metric: "integration_readiness_rate",
+    requires: [],
+    run: () => {
+      const r = buildIntegrationReport({ feature: "demo", tasksDir: INTEG("task-not-completed/tasks"), now: EVAL_NOW });
+      return { command_or_check: "buildIntegrationReport", expected: "not ready (task no completed)", actual: r.ready ? "ready (LEAK)" : "not ready", passed: !r.ready, message: r.ready ? "no bloqueó task no completed" : "" };
+    },
+  },
+  {
+    id: "integration-missing-verdict-blocks",
+    category: "integration",
+    metric: "integration_readiness_rate",
+    requires: [],
+    run: () => {
+      const r = buildIntegrationReport({ feature: "demo", tasksDir: INTEG("missing-verdict/tasks"), now: EVAL_NOW });
+      return { command_or_check: "buildIntegrationReport", expected: "not ready (falta verdict)", actual: r.ready ? "ready (LEAK)" : "not ready", passed: !r.ready, message: r.ready ? "no bloqueó verdict faltante" : "" };
+    },
+  },
+  {
+    id: "integration-policy-blocks",
+    category: "integration",
+    metric: "integration_readiness_rate",
+    requires: [],
+    run: () => {
+      const r = buildIntegrationReport({ feature: "demo", tasksDir: INTEG("policy-blocked/tasks"), policiesDir: INTEG("policy-blocked/policies"), now: EVAL_NOW });
+      return { command_or_check: "buildIntegrationReport", expected: "not ready (policy)", actual: r.ready ? "ready (LEAK)" : "not ready", passed: !r.ready, message: r.ready ? "no bloqueó policy" : "" };
+    },
+  },
+  {
+    id: "integration-approval-missing-blocks",
+    category: "integration",
+    metric: "integration_readiness_rate",
+    requires: [],
+    run: () => {
+      const r = buildIntegrationReport({ feature: "demo", tasksDir: INTEG("approval-missing/tasks"), now: EVAL_NOW });
+      return { command_or_check: "buildIntegrationReport", expected: "not ready (approval)", actual: r.ready ? "ready (LEAK)" : "not ready", passed: !r.ready, message: r.ready ? "no bloqueó approval faltante" : "" };
     },
   },
 ];

@@ -1,0 +1,8 @@
+id: no-env
+title: No .env
+severity: CRITICAL
+status: active
+block_condition: path_match
+applies_to: { paths: ["**/.env*"] }
+approval_required: none
+responsible_agent: security

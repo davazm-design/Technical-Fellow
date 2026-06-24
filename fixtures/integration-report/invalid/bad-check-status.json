@@ -1,0 +1,6 @@
+{
+  "feature": "demo", "generated_at": "2026-06-24T12:00:00Z", "ready": false,
+  "merge_order": [], "blockers": [],
+  "checks": [ { "name": "x", "status": "maybe" } ],
+  "tasks": []
+}
