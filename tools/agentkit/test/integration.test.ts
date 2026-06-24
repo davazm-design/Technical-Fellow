@@ -87,23 +87,34 @@ describe.skipIf(!isGitAvailable())("check-diff-ownership — end to end", () => 
     rmSync(dir, { recursive: true, force: true });
   });
 
-  function writeTask(owns: string[]): string {
+  function writeTask(owns: string[], name = "task.md"): string {
     const fm = [
       "---",
       "id: backend-1",
-      "lane: backend",
       "feature: invoices",
+      "title: test task",
+      "lane: backend",
+      "agent: backend",
+      "status: in_progress",
       "profile: lite",
       'zones: ["🟢"]',
+      "risk_level: low",
       "depends_on: []",
       "owns:",
       ...owns.map((o) => `  - ${o}`),
-      "objetivo: test",
+      "contracts: []",
+      "gates:",
+      "  audit_f1: required",
+      "  security_f1: required",
+      "  audit_f2: required",
+      "  security_f2: required",
+      "evidence_required: [tests]",
+      'acceptance_criteria: ["algo verificable"]',
       "---",
       "# task",
       "",
     ].join("\n");
-    const p = path.join(dir, "task.md");
+    const p = path.join(dir, name);
     writeFileSync(p, fm);
     return p;
   }
@@ -131,15 +142,41 @@ describe.skipIf(!isGitAvailable())("check-diff-ownership — end to end", () => 
     expect(err.join("")).toContain("git");
   });
 
-  it("exit 1 si el task es schema-inválido (owns vacío)", () => {
-    // owns vacío viola minItems del schema → exit 1
+  it("exit 1 si el task es schema-inválido (faltan campos requeridos)", () => {
     const task = path.join(dir, "bad.md");
-    writeFileSync(
-      task,
-      "---\nid: backend-1\nlane: backend\nfeature: f\nprofile: lite\nzones: [\"🟢\"]\ndepends_on: []\nowns: []\nobjetivo: x\n---\n",
-    );
+    writeFileSync(task, "---\nid: backend-1\nlane: backend\nfeature: f\n---\n");
     const code = runCheckDiffOwnership(["--task", task, "--base", "main"]);
     expect(code).toBe(1);
+  });
+
+  it("--repo permite correr contra otro repo sin chdir", () => {
+    // Volvemos al cwd original; apuntamos al repo efímero con --repo.
+    process.chdir(cwd);
+    const task = writeTask(["src/**"]);
+    const code = runCheckDiffOwnership(["--task", task, "--base", "main", "--repo", dir]);
+    expect(code).toBe(0);
+    expect(out.join("")).toContain("ownership válido");
+  });
+
+  it("ignora artefactos de control (tasks/**) por default → PASS", () => {
+    // Un cambio committeado bajo tasks/ no debe violar ownership por default.
+    writeFile(dir, "tasks/backend-1.md", "---\nx: 1\n---\n");
+    g(dir, ["add", "tasks"]);
+    g(dir, ["commit", "-m", "task artifact"]);
+    const task = writeTask(["src/**"]);
+    const code = runCheckDiffOwnership(["--task", task, "--base", "main"]);
+    expect(code).toBe(0);
+    expect(out.join("")).toContain("artefacto(s) de control ignorado");
+  });
+
+  it("--strict-artifacts hace que tasks/** viole si no está en owns → FAIL", () => {
+    writeFile(dir, "tasks/backend-1.md", "---\nx: 1\n---\n");
+    g(dir, ["add", "tasks"]);
+    g(dir, ["commit", "-m", "task artifact"]);
+    const task = writeTask(["src/**"]);
+    const code = runCheckDiffOwnership(["--task", task, "--base", "main", "--strict-artifacts"]);
+    expect(code).toBe(1);
+    expect(out.join("")).toContain("tasks/backend-1.md");
   });
 });
 

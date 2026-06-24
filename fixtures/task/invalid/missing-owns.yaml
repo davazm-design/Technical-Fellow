@@ -1,9 +1,19 @@
-# INVÁLIDO: falta el campo required `owns` (ownership es obligatorio, CANON §9).
+# INVÁLIDO: falta el campo required `owns` (ownership obligatorio, CANON §9).
 id: backend-2
-lane: backend
 feature: invoices
-contract: contracts/invoices/
+title: Task sin ownership
+lane: backend
+agent: backend
+status: planned
 profile: lite
 zones: ["🟢"]
+risk_level: low
 depends_on: []
-objetivo: Task sin ownership declarado.
+contracts: []
+gates:
+  audit_f1: required
+  security_f1: required
+  audit_f2: required
+  security_f2: required
+evidence_required: [tests]
+acceptance_criteria: ["hace algo verificable"]

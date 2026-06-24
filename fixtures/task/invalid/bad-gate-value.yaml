@@ -1,7 +1,7 @@
-# INVÁLIDO: campo no permitido `assignee` (additionalProperties:false atrapa typos/campos espurios).
-id: backend-3
+# INVÁLIDO: gates.audit_f1 fuera del enum (required|optional|skipped).
+id: backend-4
 feature: invoices
-title: Endpoint pagos
+title: Task con gate inválido
 lane: backend
 agent: backend
 status: planned
@@ -10,13 +10,12 @@ zones: ["🟢"]
 risk_level: low
 depends_on: []
 owns:
-  - src/routes/payments.ts
+  - src/routes/x.ts
 contracts: []
 gates:
-  audit_f1: required
+  audit_f1: maybe
   security_f1: required
   audit_f2: required
   security_f2: required
 evidence_required: [tests]
-acceptance_criteria: ["procesa un pago"]
-assignee: claude
+acceptance_criteria: ["algo"]

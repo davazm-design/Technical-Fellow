@@ -1,22 +1,35 @@
 ---
 id: backend-1
-lane: backend
 feature: invoices
-contract: contracts/invoices/
+title: Endpoint POST /invoices
+lane: backend
+agent: backend
+status: planned
 profile: lite
 zones: ["🟢"]
+risk_level: low
 depends_on: [db-1]
-worktree: ../wt-backend-1
-branch: backend/backend-1
 owns:
   - src/routes/invoices.ts
   - tests/routes/invoices.test.ts
-objetivo: |
-  Implementar el endpoint POST /invoices contra el contrato congelado.
+contracts: ["contracts/invoices/"]
+gates:
+  audit_f1: required
+  security_f1: required
+  audit_f2: required
+  security_f2: required
+evidence_required:
+  - tests
+  - typecheck
+  - ownership_check
+acceptance_criteria:
+  - POST /invoices crea una factura y responde 201 con el recurso.
+  - El body se valida en el boundary (additionalProperties:false).
+notes: Ejemplo VÁLIDO con frontmatter YAML real; el cuerpo es libre.
 ---
-# TASK backend-1
+# TASK backend-1 — Endpoint POST /invoices
 
-> Ejemplo VÁLIDO: task con frontmatter YAML real. El cuerpo markdown es libre.
+> Cuerpo markdown libre: contexto, non-goals, plan.
 
 ## Estado del pipeline
 - [ ] architect → ___

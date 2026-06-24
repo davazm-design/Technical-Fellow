@@ -1,11 +1,21 @@
-# INVÁLIDO: profile fuera del enum (lite|full).
+# INVÁLIDO: profile fuera del enum (lite|full). El resto es válido para aislar la causa.
 id: frontend-1
-lane: frontend
 feature: invoices
-contract: contracts/invoices/
+title: Página de listado
+lane: frontend
+agent: frontend
+status: planned
 profile: medium
 zones: ["🟢"]
+risk_level: low
 depends_on: []
 owns:
   - web/src/pages/Invoices.tsx
-objetivo: Página de listado de facturas.
+contracts: []
+gates:
+  audit_f1: required
+  security_f1: required
+  audit_f2: required
+  security_f2: required
+evidence_required: [tests]
+acceptance_criteria: ["renderiza la lista de facturas"]
