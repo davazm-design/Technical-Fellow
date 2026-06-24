@@ -5,6 +5,7 @@ import { runDoctor } from "./commands/doctor.js";
 import { runCheckDiffOwnership } from "./commands/check-diff-ownership.js";
 import { runValidateRunLog, runAppendRunEvent } from "./commands/run-log.js";
 import { runGraph, runStatus, runNext, runValidatePlan } from "./commands/orchestrate.js";
+import { runEvalCommand } from "./commands/eval.js";
 
 const HELP = `agentkit — validadores mecánicos del parallel-dev-kit
 
@@ -20,6 +21,7 @@ uso:
   agentkit status --tasks <dir> [--json]      resumen del plan (ready/blocked/ciclos/…)
   agentkit next --tasks <dir> [--json]        tasks listas para ejecutar
   agentkit validate-plan --tasks <dir>        valida todo el plan (schema + DAG)
+  agentkit eval [--case <id>] [--json]        evals deterministas de capacidades críticas
 
 tipos: ${Object.keys(ARTIFACT_TYPES).join(", ")}
 
@@ -46,6 +48,7 @@ function main(argv: string[]): number {
   if (cmd === "status") return runStatus(rest);
   if (cmd === "next") return runNext(rest);
   if (cmd === "validate-plan") return runValidatePlan(rest);
+  if (cmd === "eval") return runEvalCommand(rest);
 
   // Aliases validate-<tipo> (incluye validate-run-event). Va DESPUÉS de validate-run-log/validate-plan.
   if (cmd.startsWith("validate-")) {

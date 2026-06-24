@@ -1,0 +1,15 @@
+# inválida a propósito: falta owns, risk_level fuera de enum
+id: backend-1
+feature: eval
+title: task inválida de eval
+lane: backend
+agent: backend
+status: planned
+profile: lite
+zones: ["🟢"]
+risk_level: extreme
+depends_on: []
+contracts: []
+gates: { audit_f1: required, security_f1: required, audit_f2: required, security_f2: required }
+evidence_required: [tests]
+acceptance_criteria: ["x"]
