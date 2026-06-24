@@ -1,0 +1,11 @@
+# INVÁLIDO: profile fuera del enum (lite|full).
+id: frontend-1
+lane: frontend
+feature: invoices
+contract: contracts/invoices/
+profile: medium
+zones: ["🟢"]
+depends_on: []
+owns:
+  - web/src/pages/Invoices.tsx
+objetivo: Página de listado de facturas.

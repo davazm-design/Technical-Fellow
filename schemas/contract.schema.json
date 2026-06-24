@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parallel-dev-kit/schemas/contract.schema.json",
+  "title": "ContractManifest",
+  "description": "Manifiesto del Contrato Compartido de un feature (CANON §8). NO re-valida el OpenAPI ni los tipos TS — declara qué artefactos componen el contrato, su versión y si está congelado. El api.yaml se valida como OpenAPI 3.1 por su propio tooling.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["feature", "version", "status", "artifacts"],
+  "properties": {
+    "feature": { "type": "string", "minLength": 1 },
+    "version": {
+      "type": "string",
+      "description": "Versión semántica del contrato.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "status": {
+      "type": "string",
+      "description": "draft: en construcción. frozen: congelado, inmutable durante la fase paralela (CANON §8).",
+      "enum": ["draft", "frozen"]
+    },
+    "frozen_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp del congelamiento (requerido conceptualmente cuando status=frozen)."
+    },
+    "artifacts": {
+      "type": "object",
+      "description": "Los tres componentes del contrato (data + api + types).",
+      "additionalProperties": false,
+      "required": ["api", "types", "data"],
+      "properties": {
+        "api": { "type": "string", "description": "Ruta al contrato OpenAPI (api.contract.yaml)." },
+        "types": { "type": "string", "description": "Ruta a los tipos compartidos (types.contract.ts)." },
+        "data": { "type": "string", "description": "Ruta al modelo de datos (data.contract.md)." }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "frozen" } } },
+      "then": { "required": ["frozen_at"] }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parallel-dev-kit/schemas/run-event.schema.json",
+  "title": "RunEvent",
+  "description": "Evento estructurado de una ejecución (CANON §10, Fase 6). Un run log es un archivo JSONL: una línea = un objeto que valida contra este schema. Sin secretos ni PII.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "timestamp", "event_type"],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "description": "Identificador de la ejecución. Agrupa todos los eventos de un mismo run.",
+      "minLength": 1
+    },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "run_started",
+        "agent_invoked",
+        "artifact_created",
+        "validation_passed",
+        "validation_failed",
+        "gate_blocked",
+        "human_approval_requested",
+        "human_approval_granted",
+        "task_completed",
+        "integration_started",
+        "integration_failed",
+        "integration_completed"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["debug", "info", "warning", "error", "critical"]
+    },
+    "agent_id": { "type": "string" },
+    "task_id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "feature_id": { "type": "string" },
+    "input_refs": { "type": "array", "items": { "type": "string" } },
+    "output_refs": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } },
+    "model": { "type": "string", "description": "Modelo usado, si aplica." },
+    "tokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input": { "type": "integer", "minimum": 0 },
+        "output": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "cost_usd": { "type": "number", "minimum": 0 },
+    "duration_ms": { "type": "integer", "minimum": 0 }
+  }
+}

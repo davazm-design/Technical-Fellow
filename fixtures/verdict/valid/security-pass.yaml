@@ -1,0 +1,12 @@
+# VÁLIDO: veredicto de security (F1).
+task_id: backend-1
+feature: invoices
+phase: security
+agent: security
+verdict: PASS_WITH_WARNINGS
+timestamp: "2026-06-24T11:05:00Z"
+findings:
+  - severity: LOW
+    description: Falta rate-limit explícito en el endpoint de creación.
+conditions:
+  - Documentar el rate-limit en el siguiente slice.

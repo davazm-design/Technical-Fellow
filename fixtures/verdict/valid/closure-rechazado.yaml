@@ -1,0 +1,14 @@
+# VÁLIDO: veredicto de cierre (F2) del Auditor — rechazo con evidencia.
+task_id: backend-1
+feature: invoices
+phase: closure-audit
+agent: audit
+verdict: CIERRE RECHAZADO
+timestamp: "2026-06-24T15:00:00Z"
+findings:
+  - severity: HIGH
+    description: 'El builder declaró "cubierto con tests" pero el test sólo ejercita un helper (Nivel 1, no 3).'
+    evidence: "tests/routes/invoices.test.ts:12"
+action_required: Añadir test de flujo real (Nivel 3) sobre el endpoint.
+evidence:
+  - "npm test -- invoices = 1 passed (helper only)"

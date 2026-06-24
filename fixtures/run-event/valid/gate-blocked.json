@@ -1,0 +1,13 @@
+{
+  "run_id": "run-2026-06-24-invoices-01",
+  "timestamp": "2026-06-24T11:05:00Z",
+  "event_type": "gate_blocked",
+  "severity": "warning",
+  "feature_id": "invoices",
+  "task_id": "backend-1",
+  "agent_id": "security",
+  "evidence_refs": ["verdicts/backend-1/security.yaml"],
+  "model": "claude-opus-4-8",
+  "tokens": { "input": 1200, "output": 340 },
+  "duration_ms": 8200
+}

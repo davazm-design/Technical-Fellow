@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parallel-dev-kit/schemas/verdict.schema.json",
+  "title": "Verdict",
+  "description": "Veredicto estructurado de Auditor o Security sobre una tarea (CANON §2.3, §2.4). Variante discriminada por phase: cada fase tiene su propio vocabulario de estados, fiel al CANON. Sustituye el bloque de prosa embebido en tasks/<id>.md por un artefacto parseable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_id", "feature", "phase", "agent", "verdict"],
+  "properties": {
+    "task_id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "feature": { "type": "string", "minLength": 1 },
+    "phase": {
+      "type": "string",
+      "description": "plan: auditoría de plan (F1). security: security de plan (F1). closure-audit / closure-security: auditoría/security de cierre (F2).",
+      "enum": ["plan", "security", "closure-audit", "closure-security"]
+    },
+    "agent": { "type": "string", "enum": ["audit", "security"] },
+    "verdict": {
+      "type": "string",
+      "description": "Estado del veredicto. El valor permitido depende de phase (ver allOf)."
+    },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "description"],
+        "properties": {
+          "id": { "type": "string" },
+          "severity": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"] },
+          "description": { "type": "string", "minLength": 1 },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "description": "Referencias archivo:línea o comandos que corroboran el veredicto (regla de honestidad, CANON §3).",
+      "items": { "type": "string" }
+    },
+    "conditions": {
+      "type": "array",
+      "description": "Lista verificable cuando el veredicto es *CON CONDICIONES* / WARNINGS.",
+      "items": { "type": "string" }
+    },
+    "action_required": { "type": "string" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "phase": { "const": "plan" } } },
+      "then": {
+        "properties": {
+          "agent": { "const": "audit" },
+          "verdict": { "enum": ["APROBADO", "APROBADO CON CONDICIONES", "RECHAZADO", "ESCALAR A HUMANO"] }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "phase": { "const": "security" } } },
+      "then": {
+        "properties": {
+          "agent": { "const": "security" },
+          "verdict": { "enum": ["PASS", "PASS_WITH_WARNINGS", "BLOCKED"] }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "phase": { "const": "closure-audit" } } },
+      "then": {
+        "properties": {
+          "agent": { "const": "audit" },
+          "verdict": { "enum": ["CIERRE APROBADO", "CIERRE CON CONDICIONES", "CIERRE RECHAZADO"] }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "phase": { "const": "closure-security" } } },
+      "then": {
+        "properties": {
+          "agent": { "const": "security" },
+          "verdict": { "enum": ["CIERRE APROBADO", "CIERRE CON CONDICIONES", "CIERRE RECHAZADO"] }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# INVÁLIDO: phase=plan no admite el veredicto PASS (ese es vocabulario de security).
+# El allOf if/then fuerza el enum correcto por fase.
+task_id: backend-1
+feature: invoices
+phase: plan
+agent: audit
+verdict: PASS

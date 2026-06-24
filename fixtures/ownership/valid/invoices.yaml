@@ -1,0 +1,25 @@
+# VÁLIDO: mapa de ownership derivado de los tasks del feature invoices.
+feature: invoices
+tasks:
+  - id: db-1
+    lane: db
+    owns: ["migrations/0007_invoices.sql"]
+    depends_on: []
+    profile: full
+  - id: backend-1
+    lane: backend
+    owns: ["src/routes/invoices.ts", "tests/routes/invoices.test.ts"]
+    depends_on: [db-1]
+    profile: lite
+  - id: frontend-1
+    lane: frontend
+    owns: ["web/src/pages/Invoices.tsx", "web/src/api/invoices.ts"]
+    depends_on: []
+    profile: lite
+integration_files:
+  - path: src/server.ts
+    disposition: integration-owned
+    detail: lo cablea el /integrator; no está en ningún owns.
+  - path: src/lib/user-context.ts
+    disposition: pre-step-frozen
+    detail: construido secuencial antes de abrir los lanes.

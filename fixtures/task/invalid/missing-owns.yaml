@@ -1,0 +1,9 @@
+# INVÁLIDO: falta el campo required `owns` (ownership es obligatorio, CANON §9).
+id: backend-2
+lane: backend
+feature: invoices
+contract: contracts/invoices/
+profile: lite
+zones: ["🟢"]
+depends_on: []
+objetivo: Task sin ownership declarado.

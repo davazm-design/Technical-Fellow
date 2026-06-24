@@ -1,0 +1,5 @@
+# INVÁLIDO: falta task_id (un veredicto sin tarea no es trazable).
+feature: invoices
+phase: security
+agent: security
+verdict: BLOCKED

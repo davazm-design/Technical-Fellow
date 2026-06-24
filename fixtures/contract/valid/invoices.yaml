@@ -1,0 +1,9 @@
+# VÁLIDO: manifiesto de contrato congelado.
+feature: invoices
+version: 0.1.0
+status: frozen
+frozen_at: "2026-06-24T10:00:00Z"
+artifacts:
+  api: contracts/invoices/api.contract.yaml
+  types: contracts/invoices/types.contract.ts
+  data: contracts/invoices/data.contract.md
