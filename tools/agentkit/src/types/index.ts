@@ -6,3 +6,4 @@ export type { ContractManifest } from "./generated/contract.js";
 export type { Verdict } from "./generated/verdict.js";
 export type { RunEvent } from "./generated/run-event.js";
 export type { Policy } from "./generated/policy.js";
+export type { Approval } from "./generated/approval.js";

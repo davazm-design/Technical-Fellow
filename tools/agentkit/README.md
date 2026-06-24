@@ -204,6 +204,35 @@ responsible_agent: security
 **E1 NO incluye** approvals formales (E2) ni integrator (E3+); `policies/**` y `approvals/**` se ignoran
 por default en `check-diff-ownership`.
 
+### approval records HITL (Bloque E2)
+
+Un **approval record** es **evidencia auditable versionada** de una decisión humana. **NO es** control
+de acceso, ni firma, ni RBAC, ni quórum: solo registra que alguien aprobó (o no) algo, de forma
+revisable en git. Vive en `approvals/<feature>/<approval_id>.yaml` (schema `approval.schema.json`).
+`approvals/**` se ignora por default en `check-diff-ownership`.
+
+```bash
+agentkit validate-approval approvals/invoices/APR-001.yaml
+agentkit check-approvals --feature invoices --approvals approvals/invoices/ --task tasks/db-1.md \
+  [--policies policies/] [--now 2026-06-24T12:00:00Z] [--json]
+```
+
+**Qué dispara una aprobación requerida** (`check-approvals` toma el máximo):
+- `risk_level: critical` → **formal**
+- `zones` contiene 🔴 o 🟠 → **formal**
+- una policy activa que aplica con `approval_required: formal|nominal` (si pasas `--policies`)
+
+**nominal vs formal:** `formal` satisface formal y nominal; `nominal` satisface solo nominal;
+`pending`/`rejected`/expirada no satisfacen nada. Un approval sin `approval_type` se trata como
+`nominal` (conservador). `--now` permite tests deterministas de expiración.
+
+**Una approval satisface** si: `feature_id` coincide, (`task_id` ausente o == el task), `decision:
+approved`, no expirada, y su tipo ≥ el requerido. Exit `0` suficiente · `1` faltante/pending/rejected/
+expirada · `2` operacional (dir inexistente, schema inválido de task/approval/policy).
+
+**E2 NO incluye** integrator (E3+), merge/deploy, control de acceso real, firmas ni RBAC. Un approval
+es evidencia: distingue la aprobación formal de la confirmación conversacional, nada más.
+
 ## Exit codes (consistentes en toda la CLI)
 
 | Code | Significado |

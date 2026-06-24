@@ -1,0 +1,7 @@
+approval_id: APR-100
+feature_id: invoices
+scope: "decision fuera del enum"
+risk_level: high
+requested_by: dev@example.com
+decision: maybe
+timestamp: "2026-06-24T10:00:00Z"

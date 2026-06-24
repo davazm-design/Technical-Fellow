@@ -1,0 +1,8 @@
+approval_id: APR-003
+feature_id: invoices
+scope: "Cambio en auth"
+risk_level: critical
+approval_type: formal
+requested_by: dev@example.com
+decision: pending
+timestamp: "2026-06-24T12:00:00Z"

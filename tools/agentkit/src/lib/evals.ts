@@ -8,7 +8,8 @@ import { classifyDiff } from "./ownership.js";
 import { analyzePlan, planIsValid } from "./dag.js";
 import { validateRunLog } from "./runlog.js";
 import { evaluatePolicies } from "./policy.js";
-import type { Task, Policy } from "../types/index.js";
+import { requiredApproval, checkApprovals } from "./approval.js";
+import type { Task, Policy, Approval } from "../types/index.js";
 
 export const CASES_DIR = path.join(REPO_ROOT, "evals", "cases");
 
@@ -64,6 +65,13 @@ function evalPolicy(over: Partial<Policy>): Policy {
     approval_required: "none", responsible_agent: "security", ...over } as Policy;
 }
 const active = (ps: Policy[]) => ps.filter((p) => p.status === "active");
+
+const EVAL_NOW = new Date("2026-06-24T12:00:00Z");
+function evalApproval(over: Partial<Approval>): Approval {
+  return { approval_id: "APR-1", feature_id: "eval", scope: "s", risk_level: "high",
+    approval_type: "formal", requested_by: "dev", approved_by: "lead", decision: "approved",
+    timestamp: "2026-06-24T10:00:00Z", ...over } as Approval;
+}
 
 const CASE_DEFS: CaseDef[] = [
   {
@@ -221,6 +229,71 @@ const CASE_DEFS: CaseDef[] = [
       const contents = new Map<string, string>([["src/config.ts", 'const k = "AKIA1234567890ABCDEF";']]);
       const r = evaluatePolicies(t, active(ps), { candidatePaths: t.owns, fileContents: contents });
       return { command_or_check: "evaluatePolicies (secret scan)", expected: "bloquea (secret)", actual: r.ok ? "no detectó (LEAK)" : "bloqueado", passed: !r.ok, message: r.ok ? "no detectó secret-like pattern" : "" };
+    },
+  },
+  {
+    id: "approval-pass",
+    category: "approval",
+    metric: "approval_pass_rate",
+    requires: [],
+    run: () => {
+      const t = evalTask({ risk_level: "critical" });
+      const req = requiredApproval(t, []);
+      const r = checkApprovals(t, "eval", [evalApproval({ feature_id: "eval", approval_type: "formal" })], req, EVAL_NOW);
+      return { command_or_check: "checkApprovals", expected: "approval formal presente → ok", actual: r.ok ? "ok" : "bloqueado", passed: r.ok, message: r.ok ? "" : r.findings.join("; ") };
+    },
+  },
+  {
+    id: "approval-missing-blocks",
+    category: "approval",
+    metric: "approval_enforcement_rate",
+    requires: [],
+    run: () => {
+      const t = evalTask({ risk_level: "critical" });
+      const req = requiredApproval(t, []);
+      const r = checkApprovals(t, "eval", [], req, EVAL_NOW);
+      return { command_or_check: "checkApprovals", expected: "bloquea (sin approval)", actual: r.ok ? "no bloqueó (LEAK)" : "bloqueado", passed: !r.ok, message: r.ok ? "task critical sin approval no fue bloqueado" : "" };
+    },
+  },
+  {
+    id: "approval-expired-blocks",
+    category: "approval",
+    metric: "approval_enforcement_rate",
+    requires: [],
+    run: () => {
+      const t = evalTask({ risk_level: "critical" });
+      const req = requiredApproval(t, []);
+      const a = evalApproval({ feature_id: "eval", expiration: "2026-02-01T00:00:00Z" });
+      const r = checkApprovals(t, "eval", [a], req, EVAL_NOW);
+      return { command_or_check: "checkApprovals", expected: "bloquea (expirada)", actual: r.ok ? "no bloqueó (LEAK)" : "bloqueado", passed: !r.ok, message: r.ok ? "approval expirada fue aceptada" : "" };
+    },
+  },
+  {
+    id: "approval-rejected-blocks",
+    category: "approval",
+    metric: "approval_enforcement_rate",
+    requires: [],
+    run: () => {
+      const t = evalTask({ risk_level: "critical" });
+      const req = requiredApproval(t, []);
+      const a = evalApproval({ feature_id: "eval", decision: "rejected" });
+      const r = checkApprovals(t, "eval", [a], req, EVAL_NOW);
+      return { command_or_check: "checkApprovals", expected: "bloquea (rejected)", actual: r.ok ? "no bloqueó (LEAK)" : "bloqueado", passed: !r.ok, message: r.ok ? "approval rejected fue aceptada" : "" };
+    },
+  },
+  {
+    id: "approval-policy-required-pass",
+    category: "approval",
+    metric: "approval_pass_rate",
+    requires: [],
+    run: () => {
+      // task 🟢 low risk, pero una policy formal aplica → requiere formal; se provee.
+      const t = evalTask({ risk_level: "low", zones: ["🟢"] });
+      const ps = [evalPolicy({ id: "p-formal", block_condition: "zone_touch", applies_to: { zones: ["🟢"] }, approval_required: "formal" })];
+      const req = requiredApproval(t, active(ps));
+      const r = checkApprovals(t, "eval", [evalApproval({ feature_id: "eval", approval_type: "formal" })], req, EVAL_NOW);
+      const passed = req.level === "formal" && r.ok;
+      return { command_or_check: "requiredApproval+checkApprovals", expected: "policy exige formal → satisfecho", actual: `req=${req.level}, ${r.ok ? "ok" : "bloqueado"}`, passed, message: passed ? "" : "policy formal no derivó requerimiento o no se satisfizo" };
     },
   },
 ];

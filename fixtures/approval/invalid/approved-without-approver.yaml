@@ -1,0 +1,8 @@
+# decision approved exige approved_by (allOf if/then)
+approval_id: APR-101
+feature_id: invoices
+scope: "approved sin approved_by"
+risk_level: high
+requested_by: dev@example.com
+decision: approved
+timestamp: "2026-06-24T10:00:00Z"

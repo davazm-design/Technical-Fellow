@@ -1,0 +1,13 @@
+approval_id: APR-001
+feature_id: invoices
+scope: "Migración de schema de invoices (zona 🟠)"
+risk_level: high
+approval_type: formal
+requested_by: dev@example.com
+approved_by: lead@example.com
+approver_role: tech-lead
+decision: approved
+reason: "Revisado el plan y el rollback."
+timestamp: "2026-06-24T10:00:00Z"
+expiration: "2026-12-31T00:00:00Z"
+evidence_refs: ["verdicts/db-1/closure-audit.yaml"]

@@ -7,6 +7,7 @@ import { runValidateRunLog, runAppendRunEvent } from "./commands/run-log.js";
 import { runGraph, runStatus, runNext, runValidatePlan } from "./commands/orchestrate.js";
 import { runEvalCommand } from "./commands/eval.js";
 import { runEvaluatePolicies } from "./commands/policy.js";
+import { runCheckApprovals } from "./commands/approval.js";
 
 const HELP = `agentkit — validadores mecánicos del parallel-dev-kit
 
@@ -25,6 +26,8 @@ uso:
   agentkit eval [--case <id>] [--json]        evals deterministas de capacidades críticas
   agentkit validate-policy <file>             valida una policy contra su schema
   agentkit evaluate-policies --task <f> --policies <dir> [--repo <p>] [--threshold LVL]
+  agentkit validate-approval <file>           valida un approval record contra su schema
+  agentkit check-approvals --feature <id> --approvals <dir> --task <f> [--policies <dir>] [--now <iso>]
 
 tipos: ${Object.keys(ARTIFACT_TYPES).join(", ")}
 
@@ -53,6 +56,7 @@ function main(argv: string[]): number {
   if (cmd === "validate-plan") return runValidatePlan(rest);
   if (cmd === "eval") return runEvalCommand(rest);
   if (cmd === "evaluate-policies") return runEvaluatePolicies(rest);
+  if (cmd === "check-approvals") return runCheckApprovals(rest);
 
   // Aliases validate-<tipo> (incluye validate-run-event). Va DESPUÉS de validate-run-log/validate-plan.
   if (cmd.startsWith("validate-")) {

@@ -1,0 +1,10 @@
+approval_id: APR-004
+feature_id: invoices
+scope: "Cambio rechazado"
+risk_level: high
+approval_type: formal
+requested_by: dev@example.com
+approved_by: lead@example.com
+decision: rejected
+reason: "Falta threat model."
+timestamp: "2026-06-24T12:30:00Z"

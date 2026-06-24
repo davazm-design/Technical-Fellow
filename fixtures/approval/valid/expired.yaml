@@ -1,0 +1,10 @@
+approval_id: APR-005
+feature_id: invoices
+scope: "Approval vencida"
+risk_level: high
+approval_type: formal
+requested_by: dev@example.com
+approved_by: lead@example.com
+decision: approved
+timestamp: "2026-01-01T00:00:00Z"
+expiration: "2026-02-01T00:00:00Z"

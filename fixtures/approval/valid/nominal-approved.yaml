@@ -1,0 +1,9 @@
+approval_id: APR-002
+feature_id: invoices
+scope: "Confirmación nominal del PR backend-1"
+risk_level: low
+approval_type: nominal
+requested_by: dev@example.com
+approved_by: dev@example.com
+decision: approved
+timestamp: "2026-06-24T11:00:00Z"

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parallel-dev-kit/schemas/approval.schema.json",
+  "title": "Approval",
+  "description": "Registro auditable y versionado de una decisión humana (E2). NO es control de acceso real, ni firma, ni RBAC, ni quórum: es EVIDENCIA. Distingue aprobación formal de confirmación nominal. Vive en approvals/<feature>/<approval_id>.yaml.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["approval_id", "feature_id", "scope", "risk_level", "requested_by", "decision", "timestamp"],
+  "properties": {
+    "approval_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$", "description": "Identificador estable." },
+    "feature_id": { "type": "string", "minLength": 1 },
+    "task_id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "Si está, la approval aplica solo a esa task; si no, aplica a todo el feature." },
+    "scope": { "type": "string", "minLength": 1, "description": "Qué se aprueba (descripción humana)." },
+    "risk_level": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+    "approval_type": {
+      "type": "string",
+      "enum": ["nominal", "formal"],
+      "description": "formal satisface formal y nominal; nominal satisface solo nominal. Si se omite, se trata como nominal (conservador)."
+    },
+    "requested_by": { "type": "string", "minLength": 1 },
+    "approved_by": { "type": "string", "description": "Requerido cuando decision=approved." },
+    "approver_role": { "type": "string" },
+    "decision": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+    "reason": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "expiration": { "type": "string", "format": "date-time", "description": "Si está y ya pasó, la approval no satisface." },
+    "policy_ids": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "evidence_refs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "notes": { "type": "string" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "decision": { "const": "approved" } } },
+      "then": { "required": ["approved_by"], "properties": { "approved_by": { "minLength": 1 } } }
+    }
+  ]
+}
