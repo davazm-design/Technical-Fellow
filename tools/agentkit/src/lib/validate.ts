@@ -18,6 +18,7 @@ export const ARTIFACT_TYPES = {
   verdict: "verdict.schema.json",
   "run-event": "run-event.schema.json",
   policy: "policy.schema.json",
+  approval: "approval.schema.json",
 } as const;
 
 export type ArtifactType = keyof typeof ARTIFACT_TYPES;

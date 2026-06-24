@@ -1,0 +1,6 @@
+approval_id: APR-102
+scope: "sin feature_id"
+risk_level: high
+requested_by: dev@example.com
+decision: pending
+timestamp: "2026-06-24T10:00:00Z"
