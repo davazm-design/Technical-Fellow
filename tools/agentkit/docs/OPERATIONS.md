@@ -141,6 +141,7 @@ un `2` significa "no se pudo evaluar" (arreglar el input/entorno).
 
 ## 7. Limitaciones conocidas
 
+- **policy.severity y approval_required son gates INDEPENDIENTES** (ver subsección al final de §7): una approval válida **no** desbloquea una policy bloqueante.
 - **secret scanning es heurístico** (best-effort): falsos negativos posibles; **nunca afirma ausencia** de secretos.
 - **approvals son YAML editables**: evidencia auditable versionada, **no** autorización/control de acceso real; su integridad depende de git y la revisión humana.
 - **ownership en integration-report** usa *union de owns vs diff* (detecta archivos sin owner del feature); no re-verifica disjunción entre tasks.
@@ -150,6 +151,35 @@ un `2` significa "no se pudo evaluar" (arreglar el input/entorno).
 - **three-dot diff** (`<base>...HEAD`) no ve cambios sin commitear; usa `--staged` para el index.
 - **binario `agentkit` robusto** diferido: se invoca vía `npm run -s agentkit --` (tsx, sin build).
 - **integration-plan** no tiene schema propio (es objeto derivado del report).
+
+### Interacción policy.severity ↔ approval_required (importante)
+
+`policies` y `approvals` son **gates independientes**. No se reconcilian entre sí: una approval
+válida satisface `check-approvals`, pero **NO** convierte una policy bloqueante en no-bloqueante.
+`integration-report` los evalúa por separado, así que una policy que bloquea deja el feature
+`NOT READY` aunque exista una approval formal aprobada.
+
+**Regla conceptual:**
+- `severity` controla el **bloqueo** de la policy: bloquea si `severity ≥ --threshold` (default `HIGH`);
+  `secret_pattern` y la intención 🔴 bloquean **siempre**.
+- `approval_required` controla si se **exige evidencia humana** (lo hace cumplir `check-approvals`).
+- una approval válida **satisface** `check-approvals`; **no** desactiva el bloqueo de una policy.
+
+**Patrón A — "requiere aprobación, pero NO está prohibido"** (el caso típico de 🟠 / migraciones):
+- `approval_required: formal` (o `nominal`)
+- `severity` **por debajo** del threshold de bloqueo (p.ej. `MEDIUM` si el default es `HIGH`)
+- así la policy **no** bloquea por sí misma; el requerimiento de aprobación lo hace cumplir
+  `check-approvals` (e `integration-report` lo refleja en el check `approvals`).
+
+**Patrón B — "prohibido salvo cambio de policy"** (p.ej. secretos):
+- `severity: HIGH`/`CRITICAL` según threshold (o `block_condition: secret_pattern`, que bloquea siempre)
+- **no** asumir que una approval lo desbloquea: para permitirlo, el equipo debe **cambiar la policy
+  o el `--threshold` explícitamente**.
+
+> **Lección del piloto admisionesCRM:** una policy de migración 🟠 con `severity: HIGH` +
+> `approval_required: formal` produjo `NOT READY` en `integration-report` **pese a** tener una
+> approval formal válida — porque HIGH ≥ threshold la hace bloqueante (Patrón B), no "requiere
+> aprobación" (Patrón A). No es un bug: es el modelado. Para "🟠 requiere aprobación" usa el Patrón A.
 
 ---
 
@@ -195,15 +225,27 @@ acceptance_criteria: ["POST /invoices responde 201 con el recurso"]
 # cuerpo libre: contexto, non-goals, plan
 ```
 
-**Policy simple** (`policies/no-secrets.yaml`):
+**Policy — Patrón B "prohibido salvo cambio de policy"** (secretos, bloquea siempre; ver §7):
 ```yaml
 id: no-secrets
 title: Sin secretos en el diff
-severity: CRITICAL
+severity: CRITICAL          # ≥ threshold → bloquea; secret_pattern bloquea siempre
 status: active
 block_condition: secret_pattern
-approval_required: formal
+approval_required: formal   # exige evidencia humana ADEMÁS del bloqueo
 responsible_agent: security
+```
+
+**Policy — Patrón A "requiere aprobación, no prohibido"** (migración 🟠; NO bloquea, exige approval):
+```yaml
+id: migrations-need-approval
+title: Migraciones (🟠) requieren aprobación formal
+severity: MEDIUM            # < threshold (HIGH) → NO bloquea por sí misma
+status: active
+block_condition: zone_touch
+applies_to: { zones: ["🟠"] }
+approval_required: formal   # check-approvals exige la approval; sin ella, integration-report = not ready
+responsible_agent: audit
 ```
 
 **Approval formal** (`approvals/invoices/APR-001.yaml`):
