@@ -89,6 +89,41 @@ npm run -s agentkit -- eval
 10. **Plan sugerido:** `agentkit integration-plan …` (mismos flags).
 11. **El humano revisa** el plan y **decide si ejecuta** los comandos manualmente. agentkit no integra.
 
+### 3.1 Integración en repos con `main` protegida (PR-first) — lección del ciclo C1
+
+Si el repo objetivo tiene **branch protection** en `main` (PR obligatorio + status checks), el flujo
+operativo correcto es **rama → PR → checks → merge remoto → reconcile local**. El push directo a `main`
+será rechazado por GitHub (`GH013`), y NO debe forzarse ni bypassearse.
+
+**Regla PR-first:**
+- **No** pushear `main` directamente; **no** mergear localmente a `main` antes del PR (genera divergencia).
+- Trabajar en rama feature → `git push -u origin <rama>` → abrir PR (`gh pr create --base main`).
+- Esperar los **status checks** del repo; mergear en GitHub o con `gh pr merge` (respeta la protección).
+- Tras el merge remoto: `git fetch origin && git checkout main && git reset --hard origin/main`
+  (solo con árbol limpio y PR ya mergeado).
+
+**Squash vs merge commit:**
+- La **política del repo manda**, no el `integration-plan`. Los `suggested_commands` muestran `--no-ff`
+  como ejemplo, pero muchos repos usan **squash** (commit único `… (#NN)`).
+- Con squash, los commits locales de la rama feature **pueden no ser ancestros** de `main`, así que
+  `git branch -d` no la verá como "merged" → borrarla requiere `git branch -D` (confirmación manual).
+
+**Verificar el estado REAL antes de declarar "mergeado" o reconciliar:**
+- `gh pr view <n> --json state,mergedAt,mergeCommit` y `gh pr checks <n>` — la verdad está en el remoto,
+  no en una suposición. Si un `git fetch` falló por red, las refs locales quedan stale: **no** hacer
+  `reset --hard` sobre un `origin/main` no actualizado.
+
+**Si `main` local quedó divergente por un merge local previo (error):**
+- **No** force-push, **no** bypass. Después de que el PR esté mergeado en el remoto, reconciliar con
+  `git fetch origin` → `git reset --hard origin/main`. Nada se pierde: el cambio vive en el PR + la rama.
+
+**Flujo recomendado (resumen):**
+`agentkit gates READY` → `push feature branch` → `open PR` → `remote checks green` → `merge PR (política del repo)`
+→ `reconcile local (fetch + reset --hard origin/main)` → *(opcional, aparte)* `limpiar rama`.
+
+> **agentkit sigue siendo advisory:** NO reemplaza la branch protection ni los checks del repo. Sus gates
+> (ownership/policies/approvals/readiness) **complementan** —no sustituyen— el PR + CI del propio repositorio.
+
 ---
 
 ## 4. Artefactos y ubicación
