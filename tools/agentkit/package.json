@@ -1,6 +1,6 @@
 {
   "name": "@parallel-dev-kit/agentkit",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "CLI y validadores mecánicos del parallel-dev-kit (traducción ejecutable del CANON).",
