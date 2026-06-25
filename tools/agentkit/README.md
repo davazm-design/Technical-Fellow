@@ -3,6 +3,22 @@
 CLI y validadores mecánicos del `parallel-dev-kit` — la **traducción ejecutable del CANON**. Convierte
 reglas en prosa (ownership, estados, contratos) en gates verificables con exit codes para humanos y CI.
 
+> **¿Operando el kit por primera vez?** Empieza por la **guía operativa consolidada**:
+> [`docs/OPERATIONS.md`](docs/OPERATIONS.md) — quickstart, flujo completo de un feature, comandos por
+> categoría, troubleshooting, y qué hace / qué NO hace el sistema. Este README es la referencia
+> detallada por comando.
+
+**Qué hace (implementado):** schemas canónicos + tipos generados + loaders + CLI + CI · `validate-*` ·
+`doctor` · `check-diff-ownership` · run logs JSONL · DAG de solo lectura (`graph`/`status`/`next`/
+`validate-plan`) · `eval` · policies (`evaluate-policies`) · approvals (`check-approvals`) ·
+`integration-report` · `integration-plan` sugerido.
+
+**Qué NO hace:** auto-merge · push · deploy · checkout/pull automático · resolución de conflictos ·
+RBAC · firmas · control de acceso real · dashboard · GitHub Checks · LLM judge. `agentkit` nunca
+ejecuta git destructivo; `integration-plan` imprime comandos como **texto**, no los ejecuta; un
+**approval es evidencia auditable, no autorización real**; el **secret scanning es heurístico** (no
+garantiza ausencia de secretos). Detalle en [`docs/OPERATIONS.md`](docs/OPERATIONS.md).
+
 ## Instalación
 
 ```bash
