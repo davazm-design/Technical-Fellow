@@ -213,6 +213,7 @@ responsible_agent: security
 - carga y valida el task (task inválido → exit 1); carga las policies (dir inexistente o policy inválida → exit 2).
 - ignora `status: draft`; evalúa solo `active`.
 - bloqueo: **secretos/zona prohibida = bloqueo duro siempre**; el resto bloquea si `severity ≥ --threshold` (default `HIGH`).
+- `severity` (bloqueo) y `approval_required` (evidencia humana) son **gates independientes**: una approval válida NO desbloquea una policy bloqueante. Para "requiere aprobación pero no prohíbe", usa `severity` < threshold + `approval_required`. Ver [`docs/OPERATIONS.md` §7](docs/OPERATIONS.md).
 - `path_match` cruza `applies_to.paths` (globs) contra `owns` (+ diff si `--repo`). `secret_pattern` solo escanea
   contenido con `--repo`; **es heurístico/best-effort y NUNCA afirma ausencia de secretos**.
 - exit `0` sin bloqueo · `1` policy bloqueante · `2` operacional.
