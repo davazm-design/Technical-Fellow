@@ -309,6 +309,10 @@ human_checklist }` (solo el plan sugerido; sin resultado de ejecución, hashes, 
 **E4 NO ejecuta nada.** Imprimir el plan no integra el feature: el humano revisa, confirma CI verde y
 corre los comandos manualmente si procede. E5 (docs operativa consolidada) queda pendiente.
 
+> **Repos con `main` protegida:** el push directo a `main` será rechazado — usa el flujo **PR-first**
+> (rama → PR → checks → merge remoto → `fetch`+`reset --hard origin/main`); la política del repo (p.ej.
+> squash) manda sobre los `suggested_commands`. Detalle en [`docs/OPERATIONS.md` §3.1](docs/OPERATIONS.md).
+
 ## Exit codes (consistentes en toda la CLI)
 
 | Code | Significado |
